@@ -3,6 +3,8 @@ from cryptography.fernet import Fernet
 import hashlib
 
 # Ideally, these keys should be securely fetched from a secure storage or environment variables
+# on Linux / Unix: export GLOBAL_SALT=your_byte_string_here
+# on Windows: set GLOBAL_SALT=your_byte_string_here
 SALT = os.environ.get('GLOBAL_SALT', os.urandom(16))
 ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', Fernet.generate_key())
 
