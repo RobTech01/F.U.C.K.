@@ -35,6 +35,8 @@ For security reasons, you must set up environment variables for the encryption k
 - **Linux/Unix**: `export FUCK_GLOBAL_SALT=your_salt_here` and `export FUCK_ENCRYPTION_KEY=your_encryption_key_here`
 - **Windows**: `set FUCK_GLOBAL_SALT=your_salt_here` and `set FUCK_ENCRYPTION_KEY=your_encryption_key_here`
 
+Your bank might order the .csv headers differently.. adjust the relevant indices accordingly in main.py
+
 ## Contribution
 
 Feel free to reach out through GitHub.
