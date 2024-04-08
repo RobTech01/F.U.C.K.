@@ -22,7 +22,7 @@ pip install -r requirements.txt
 
 ## Requirements
 
-Ensure you have Python 3.6+ installed on your system. Dependencies are listed in the `requirements.txt` file, which includes necessary libraries such as `cryptography` for encryption and `hashlib` for hashing functionalities.
+Ensure you have Python 3.6+ installed on your system. Dependencies are listed in the `requirements.txt` file.
 
 ## Usage
 
