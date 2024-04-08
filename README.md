@@ -1,16 +1,14 @@
 
-# Fun Utilization and Categorization Kit (F.U.C.K.)
+# Fund Utilization and Categorization Kit (F.U.C.K.)
 
 ## Overview
 
-The Fun Utilization and Categorization Kit (F.U.C.K.) is a locally run financial tracker designed to simplify personal finance management. It processes downloadable .csv formatted bank statements from online banking platforms, categorizing transactions and remembering specific addresses for future reference. The main goal is to offer a secure, private way to track spending without sharing sensitive financial data with third-party services.
-
+The Fund Utilization and Categorization Kit (F.U.C.K.) is a locally run financial tracker for personal finance management. It processes downloadable .csv formatted bank statements from online banking platforms, categorizing transactions and remembering specific addresses for future reference. The main goal is to not having to do it manually in a spreadsheet.
 ## Features
 
-- **Local Database**: Utilizes a secured, hashed, and encrypted local database to match known addresses to their respective categories, ensuring your financial data remains private and secure.
-- **Transaction Categorization**: Automatically categorizes transactions from .csv bank statements based on previously encountered addresses.
-- **Data Security**: Implements advanced cryptographic techniques for data security, including hashing and encryption.
-- **Roadmap**: Future updates aim to introduce spending visualization, report cards, and extended data storage for comprehensive financial monitoring and review.
+- **Local Database**: Utilizes a hashed, and encrypted local database to match known addresses to their respective categories.
+- **Transaction Categorization**: Automatically categorizes transactions from .csv bank statements based on previously encountered addresses, or asks for clarification for new addresses.
+- **Roadmap**: Future updates aim to introduce spending visualization, report cards, and extended categorized & "blended" data storage for long-term financial monitoring.
 
 ## Installation
 
@@ -28,18 +26,18 @@ Ensure you have Python 3.6+ installed on your system. Dependencies are listed in
 
 ## Usage
 
-Currently, the project is in its early stages, focusing on hashing and decrypting functionalities. Future updates will expand on usage scenarios and capabilities.
+Currently only hashing and decrypting functionalities are fully implemented. Future updates will expand on the capabilities.
 
 ## Configuration
 
 For security reasons, you must set up environment variables for the encryption key and salt for hashing:
 
-- **Linux/Unix**: `export GLOBAL_SALT=your_salt_here` and `export ENCRYPTION_KEY=your_encryption_key_here`
-- **Windows**: `set GLOBAL_SALT=your_salt_here` and `set ENCRYPTION_KEY=your_encryption_key_here`
+- **Linux/Unix**: `export FUCK_GLOBAL_SALT=your_salt_here` and `export FUCK_ENCRYPTION_KEY=your_encryption_key_here`
+- **Windows**: `set FUCK_GLOBAL_SALT=your_salt_here` and `set FUCK_ENCRYPTION_KEY=your_encryption_key_here`
 
 ## Contribution
 
-While this is a personal project, feedback and suggestions are welcome. Please feel free to reach out through GitHub.
+Feel free to reach out through GitHub.
 
 ## License
 
