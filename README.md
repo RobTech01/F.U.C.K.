@@ -16,11 +16,11 @@ The Fun Utilization and Categorization Kit (F.U.C.K.) is a locally run financial
 
 Clone the repository and install dependencies:
 
-\```bash
+```bash
 git clone https://github.com/yourgithubusername/FUCK.git
 cd FUCK
 pip install -r requirements.txt
-\```
+```
 
 ## Requirements
 
