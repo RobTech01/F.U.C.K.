@@ -17,8 +17,8 @@ import hashlib
 # values especially for the salt to ensure hash consistency across application runs.
 
 
-SALT = os.environ.get('GLOBAL_SALT', os.urandom(16))
-ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', Fernet.generate_key())
+SALT = os.environ.get('FUCK_GLOBAL_SALT', os.urandom(16))
+ENCRYPTION_KEY = os.environ.get('FUCK_ENCRYPTION_KEY', Fernet.generate_key())
 
 cipher_suite = Fernet(ENCRYPTION_KEY)
 
