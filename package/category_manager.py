@@ -1,7 +1,13 @@
 from crypto_utils import hash_address, encrypt_address
 
 def get_user_category():
-    """Prompt the user to specify a category for a new bank address."""
+    """
+    Interactively prompts the user to categorize a new bank address. 
+    The user can select from a predefined list of categories or enter a new category.
+
+    Returns:
+        str: The chosen or entered category for the bank address.
+    """
     print("\nPlease categorize the new bank address:")
     categories = ['Groceries', 'Utilities', 'Rent', 'Entertainment', 'Other']
     for i, category in enumerate(categories, 1):
@@ -18,7 +24,18 @@ def get_user_category():
         return get_user_category()  # Recursively prompt until valid input
 
 def categorize_address(address, hash_table):
-    """Categorize a new bank address if it's not already in the hash table."""
+    """
+    Categorizes a new bank address by either identifying it as already categorized or prompting the user to categorize it. 
+    Utilizes hashing for address identification and encryption for secure storage of addresses.
+
+    Args:
+        address (str): The bank address to categorize.
+        hash_table (dict): A hash table where each entry maps a hashed address to its category and encrypted form.
+
+    Side Effects:
+        Prints messages to the console indicating the categorization status of the address.
+        Updates the hash_table with a new entry if the address is newly categorized.
+    """
     hashed_address = hash_address(address)
     
     if hashed_address in hash_table:
@@ -31,6 +48,9 @@ def categorize_address(address, hash_table):
         print(f"Address categorized under '{category}'.")
 
 def test_categorize_address():
+    """
+    Tests the address categorization function with a mock hash table and a test address. Demonstrates how an address is categorized and stored.
+    """
     # Mock a hash table
     hash_table = {}
     
