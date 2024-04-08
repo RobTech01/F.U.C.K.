@@ -1,5 +1,5 @@
 
-# Fund Utilization and Categorization Kit (F.U.C.K.)
+# Fund Utilization and Categorization Kit
 
 ## Overview
 
