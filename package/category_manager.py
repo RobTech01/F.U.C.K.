@@ -8,11 +8,27 @@ def get_user_category():
     Returns:
         str: The chosen or entered category for the bank address.
     """
+
     print("\nPlease categorize the new bank address:")
-    categories = ['Groceries', 'Utilities', 'Rent', 'Entertainment', 'Other']
+
+    categories = [
+        'Groceries/Food',
+        'Utilities/Bills',
+        'Rent/Mortgage',
+        'Savings',
+        'Stable Investments',
+        'High-Risk Investments',
+        'Arbitrage/Resale Profits'
+        'Retirement',
+        'Entertainment/Leisure',
+        'Health & Wellness',
+        'Education',
+        'Miscellaneous/Other'
+    ]
+
     for i, category in enumerate(categories, 1):
         print(f"{i}. {category}")
-    print("Select a number or enter a new category.")
+    print("Select a number OR enter a New Category.")
 
     user_input = input("> ").strip()
     if user_input.isdigit() and 1 <= int(user_input) <= len(categories):
