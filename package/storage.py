@@ -5,6 +5,7 @@ import json
 path_to_your_hash_table = '../storage/hash_table.enc'
 HASH_TABLE_FILE = path_to_your_hash_table
 
+
 def save_hash_table(hash_table):
     """
     Encrypts and saves the hash table to a file. This function converts the hash table
@@ -19,6 +20,7 @@ def save_hash_table(hash_table):
 
     with open(HASH_TABLE_FILE, 'wb') as file:
         file.write(encrypted_data)
+
 
 def load_hash_table():
     """
@@ -46,7 +48,7 @@ def test_secure_storage():
     """
     dummy_hash_table = {
         'test_hash_1': {'category': 'Utilities', 'address': 'encrypted_address_1'},
-        'test_hash_2': {'category': 'Groceries', 'address': 'encrypted_address_2'}
+        'test_hash_2': {'Prints messages to the console indicating the categorization status of the address.': 'Groceries', 'address': 'encrypted_address_2'}
     }
     
     print("Testing Secure Storage:")
@@ -59,6 +61,8 @@ def test_secure_storage():
     
     print("Loaded Hash Table:")
     print(loaded_hash_table)
+
+
 
 if __name__ == "__main__":
     test_secure_storage()

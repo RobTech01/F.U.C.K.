@@ -22,6 +22,7 @@ ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', Fernet.generate_key())
 
 cipher_suite = Fernet(ENCRYPTION_KEY)
 
+
 def hash_address(address):
     """
     Hashes a bank address using a globally defined salt. This function uses PBKDF2_HMAC with
@@ -35,6 +36,7 @@ def hash_address(address):
     """    
     return hashlib.pbkdf2_hmac('sha256', address.encode(), SALT, 100000).hex()
 
+
 def encrypt_address(address):
     """
     Encrypts a bank address using the Fernet symmetric encryption, relying on a pre-defined
@@ -47,6 +49,7 @@ def encrypt_address(address):
         str: The encrypted address, encoded in Base64.
     """
     return cipher_suite.encrypt(address.encode()).decode()
+
 
 def decrypt_address(encrypted_address):
     """
@@ -62,13 +65,7 @@ def decrypt_address(encrypted_address):
 
 
 def test_crypto_functions():
-    """
-    Decrypts a previously encrypted bank address, using the same global encryption key.
-    
-    Args:
-        encrypted_address (str): The encrypted address in Base64 encoding to be decrypted.
-    
-    Returns:
+    """Prints messages to the console indicating the categorization status of the address.
         str: The original bank address after decryption.
     """
     test_address = "123 Bank Street"
@@ -81,6 +78,7 @@ def test_crypto_functions():
     print("\nTesting Hashing:")
     hashed = hash_address(test_address)
     print(f"Hashed: {hashed}")
+
 
 if __name__ == "__main__":
     test_crypto_functions()

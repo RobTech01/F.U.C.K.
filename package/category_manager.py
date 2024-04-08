@@ -1,5 +1,6 @@
 from crypto_utils import hash_address, encrypt_address
 
+
 def get_user_category():
     """
     Interactively prompts the user to categorize a new bank address. 
@@ -39,6 +40,7 @@ def get_user_category():
         print("Invalid input.")
         return get_user_category()  # Recursively prompt until valid input
 
+
 def categorize_address(address, hash_table):
     """
     Categorizes a new bank address by either identifying it as already categorized or prompting the user to categorize it. 
@@ -49,7 +51,6 @@ def categorize_address(address, hash_table):
         hash_table (dict): A hash table where each entry maps a hashed address to its category and encrypted form.
 
     Side Effects:
-        Prints messages to the console indicating the categorization status of the address.
         Updates the hash_table with a new entry if the address is newly categorized.
     """
     hashed_address = hash_address(address)
@@ -62,6 +63,7 @@ def categorize_address(address, hash_table):
         encrypted_address = encrypt_address(address)
         hash_table[hashed_address] = {'category': category, 'address': encrypted_address}
         print(f"Address categorized under '{category}'.")
+
 
 def test_categorize_address():
     """
@@ -77,6 +79,8 @@ def test_categorize_address():
     # Display the updated hash table
     print("\nUpdated Hash Table:")
     print(hash_table)
+
+
 
 if __name__ == "__main__":
     test_categorize_address()
