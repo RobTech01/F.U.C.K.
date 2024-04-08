@@ -6,13 +6,29 @@ path_to_your_hash_table = '../storage/hash_table.enc'
 HASH_TABLE_FILE = path_to_your_hash_table
 
 def save_hash_table(hash_table):
-    """Encrypt and save the hash table."""
+    """
+    Encrypts and saves the hash table to a file. This function converts the hash table
+    dictionary into a JSON string, encrypts it using the Fernet cipher suite, and writes
+    the encrypted data to the specified file.
+    
+    Args:
+        hash_table (dict): The hash table to be saved, containing hashed addresses, 
+                           their categories, and encrypted forms.
+    """
     encrypted_data = cipher_suite.encrypt(json.dumps(hash_table).encode())
+
     with open(HASH_TABLE_FILE, 'wb') as file:
         file.write(encrypted_data)
 
 def load_hash_table():
-    """Load and decrypt the hash table."""
+    """
+    Loads and decrypts the hash table from a file. This function reads the encrypted data from
+    the specified file, decrypts it using the Fernet cipher suite, and converts the JSON string
+    back into a dictionary.
+    
+    Returns:
+        dict: The decrypted hash table. If the file does not exist, returns an empty dictionary.
+    """
     try:
         with open(HASH_TABLE_FILE, 'rb') as file:
             encrypted_data = file.read()
@@ -23,7 +39,11 @@ def load_hash_table():
 
 
 def test_secure_storage():
-    # Mock a hash table with some data
+    """
+    Tests the functionality of secure storage by mocking a hash table, saving it,
+    and then loading it back. This function demonstrates the encryption and decryption
+    process, along with the integrity of the data through the save and load operations.
+    """
     dummy_hash_table = {
         'test_hash_1': {'category': 'Utilities', 'address': 'encrypted_address_1'},
         'test_hash_2': {'category': 'Groceries', 'address': 'encrypted_address_2'}
