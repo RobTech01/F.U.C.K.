@@ -1,8 +1,8 @@
-from crypto_utils import cipher_suite
+from package.crypto_utils import cipher_suite
 import json
 
 
-path_to_your_hash_table = '../storage/hash_table.enc'
+path_to_your_hash_table = './storage/hash_table.enc'
 HASH_TABLE_FILE = path_to_your_hash_table
 
 
