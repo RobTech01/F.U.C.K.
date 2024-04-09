@@ -1,4 +1,4 @@
-from crypto_utils import hash_address, encrypt_address
+from package.crypto_utils import hash_address, encrypt_address
 
 
 def get_user_category():
@@ -16,6 +16,7 @@ def get_user_category():
         'Groceries/Food',
         'Utilities/Bills',
         'Rent/Mortgage',
+        'Salary',
         'Savings',
         'Stable Investments',
         'High-Risk Investments',
@@ -41,28 +42,34 @@ def get_user_category():
         return get_user_category()  # Recursively prompt until valid input
 
 
-def categorize_address(address, hash_table):
+def categorize_address(address, amount, hash_table):
     """
-    Categorizes a new bank address by either identifying it as already categorized or prompting the user to categorize it. 
-    Utilizes hashing for address identification and encryption for secure storage of addresses.
-
+    Modifies the hash_table in place to categorize the given address, adding the amount
+    to the total for the category. If the address is new, prompts the user for the category.
+    
     Args:
-        address (str): The bank address to categorize.
-        hash_table (dict): A hash table where each entry maps a hashed address to its category and encrypted form.
-
-    Side Effects:
-        Updates the hash_table with a new entry if the address is newly categorized.
+        address (str): The transaction address or description.
+        amount (float): The transaction amount.
+        hash_table (dict): The hash table storing categories, addresses, and amounts.
     """
     hashed_address = hash_address(address)
     
-    if hashed_address in hash_table:
-        print("Address already categorized.")
-    else:
+    if hashed_address not in hash_table:
         print(f"New address detected. {address}")
         category = get_user_category()
         encrypted_address = encrypt_address(address)
-        hash_table[hashed_address] = {'category': category, 'address': encrypted_address}
-        print(f"Address categorized under '{category}'.")
+        hash_table[hashed_address] = {
+            'category': category,
+            'addresses': [encrypted_address],
+            'total_amount': amount
+        }
+    else:
+        # Update the existing category with the new amount and address
+        hash_table[hashed_address]['total_amount'] += amount
+        if encrypt_address(address) not in hash_table[hashed_address]['addresses']:
+            hash_table[hashed_address]['addresses'].append(encrypt_address(address))
+    
+    print(f"Transaction categorized under '{hash_table[hashed_address]['category']}' with amount {amount}.")
 
 
 def test_categorize_address():
