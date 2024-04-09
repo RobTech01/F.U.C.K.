@@ -1,5 +1,5 @@
 
-# Fund Utilization and Categorization Kit (F.U.C.K.)
+# Fund Utilization and Categorization Kit
 
 ## Overview
 
@@ -22,13 +22,15 @@ pip install -r requirements.txt
 
 ## Requirements
 
-Ensure you have Python 3.6+ installed on your system. Dependencies are listed in the `requirements.txt` file, which includes necessary libraries such as `cryptography` for encryption and `hashlib` for hashing functionalities.
+Ensure you have Python 3.6+ installed on your system. Dependencies are listed in the `requirements.txt` file.
 
 ## Usage
 
 Currently only hashing and decrypting functionalities are fully implemented. Future updates will expand on the capabilities.
 
 ## Configuration
+
+Your bank might order the .csv headers differently.. adjust the relevant indices accordingly in main.py
 
 For security reasons, you must set up environment variables for the encryption key and salt for hashing:
 
