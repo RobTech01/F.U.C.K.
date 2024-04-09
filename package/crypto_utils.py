@@ -1,6 +1,7 @@
 import os
 from cryptography.fernet import Fernet
 import hashlib
+import getpass  
 
 # This script demonstrates how to securely hash and encrypt data, specifically bank addresses,
 # using a global salt and encryption key. These keys should ideally be stored and fetched from
@@ -16,10 +17,40 @@ import hashlib
 # as a fallback for both the salt and the encryption key. However, it's recommended to have consistent
 # values especially for the salt to ensure hash consistency across application runs.
 
+def secure_input(prompt):
+    """
+    Securely inputs data from the user, hiding it from the terminal.
+    Note: getpass doesn't visually hide the input in some IDEs or Jupyter notebooks.
+    """
+    try:
+        return getpass.getpass(prompt)
+    except Exception as e:
+        print(f"Error obtaining secure input: {e}")
+        return None
 
-SALT = os.environ.get('FUCK_GLOBAL_SALT', os.urandom(16))
-ENCRYPTION_KEY = os.environ.get('FUCK_ENCRYPTION_KEY', Fernet.generate_key())
 
+# Attempt to load the salt and encryption key from environment variables
+SALT = os.environ.get('FUCK_GLOBAL_SALT')
+if not SALT:
+    print("No global salt found in environment variables.")
+    SALT = secure_input("Please paste the global salt here (Enter to skip): ")
+    if not SALT:  # If still not provided, generate new
+        SALT = os.urandom(16)
+        print(f"\nSuggested command to set the environment variable:\nexport FUCK_GLOBAL_SALT={SALT.hex()}")
+        print("or copy the sequence between the \' \' into your password manager \n")
+
+ENCRYPTION_KEY = os.environ.get('FUCK_ENCRYPTION_KEY')
+if not ENCRYPTION_KEY:
+    print("No encryption key found in environment variables.")
+    ENCRYPTION_KEY = secure_input("Please paste the encryption key here (Enter to skip): ")
+    if not ENCRYPTION_KEY:  # If still not provided, generate new
+        ENCRYPTION_KEY = Fernet.generate_key()
+        print(f"\nSuggested command to set the environment variable:\nexport FUCK_ENCRYPTION_KEY={ENCRYPTION_KEY.decode()}")
+        print("or copy the sequence between the \' \' into your password manager \n")
+
+# Convert hex salt to bytes and ensure key is in bytes for Fernet
+SALT = bytes.fromhex(SALT) if isinstance(SALT, str) else SALT
+ENCRYPTION_KEY = ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY
 cipher_suite = Fernet(ENCRYPTION_KEY)
 
 
