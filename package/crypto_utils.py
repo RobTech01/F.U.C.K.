@@ -17,7 +17,7 @@ import getpass
 # as a fallback for both the salt and the encryption key. However, it's recommended to have consistent
 # values especially for the salt to ensure hash consistency across application runs.
 
-def secure_input(prompt):
+def secure_input(prompt) -> None:
     """
     Securely inputs data from the user, hiding it from the terminal.
     Note: getpass doesn't visually hide the input in some IDEs or Jupyter notebooks.
@@ -45,7 +45,7 @@ if not ENCRYPTION_KEY:
     ENCRYPTION_KEY = secure_input("Please paste the encryption key here (Enter to skip): ")
     if not ENCRYPTION_KEY:  # If still not provided, generate new
         ENCRYPTION_KEY = Fernet.generate_key()
-        print(f"\nSuggested command to set the environment variable:\nexport FUCK_ENCRYPTION_KEY={ENCRYPTION_KEY.decode()}")
+        print(f"\nSuggested command to set the environment variable:\nexport FUCK_ENCRYPTION_KEY={ENCRYPTION_KEY}")
         print("or copy the sequence between the \' \' into your password manager \n")
 
 # Convert hex salt to bytes and ensure key is in bytes for Fernet
@@ -54,7 +54,7 @@ ENCRYPTION_KEY = ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else
 cipher_suite = Fernet(ENCRYPTION_KEY)
 
 
-def hash_address(address):
+def hash_address(address : str) -> str:
     """
     Hashes a bank address using a globally defined salt. This function uses PBKDF2_HMAC with
     SHA-256 hash function to create a secure hash of the input address.
@@ -68,7 +68,7 @@ def hash_address(address):
     return hashlib.pbkdf2_hmac('sha256', address.encode(), SALT, 100000).hex()
 
 
-def encrypt_address(address):
+def encrypt_address(address : str) -> str:
     """
     Encrypts a bank address using the Fernet symmetric encryption, relying on a pre-defined
     global encryption key.
@@ -82,7 +82,7 @@ def encrypt_address(address):
     return cipher_suite.encrypt(address.encode()).decode()
 
 
-def decrypt_address(encrypted_address):
+def decrypt_address(encrypted_address : str) -> str:
     """
     Decrypts a previously encrypted bank address, using the same global encryption key.
     
@@ -111,5 +111,3 @@ def test_crypto_functions():
     print(f"Hashed: {hashed}")
 
 
-if __name__ == "__main__":
-    test_crypto_functions()
