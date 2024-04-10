@@ -1,8 +1,11 @@
 import csv
 from package.category_manager import categorize_address
 from package.storage import load_hash_table, save_hash_table
+from typing import Tuple, List
 
-def select_csv_columns(header):
+
+def select_csv_columns(header : List[str]) -> Tuple[int, int, int, int, int]:
+
     print("Please select the column number for the following data:")
     for index, col_name in enumerate(header):
         print(f"{index + 1}. {col_name}")
@@ -12,11 +15,10 @@ def select_csv_columns(header):
     type_col = int(input("Transaction type/text column (Enter to skip): ") or -1) - 1
     description_col = int(input("Description column (Enter to skip): ") or -1) - 1
 
-
-
     return address_col, amount_col, name_col, type_col, description_col
 
-def process_csv_file(filepath):
+
+def process_csv_file(filepath : str) -> None:
     hash_table = load_hash_table()
     try:
         with open(filepath, newline='', encoding='utf-8') as csvfile:
@@ -39,6 +41,7 @@ def process_csv_file(filepath):
 
     except Exception as e:
         print(f"An error occurred: {e}")
+
 
 def main():
     filepath = './dummy-data/january.csv'  # Adjust with your actual CSV file path
