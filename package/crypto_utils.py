@@ -109,5 +109,3 @@ def test_crypto_functions():
     print("\nTesting Hashing:")
     hashed = hash_address(test_address)
     print(f"Hashed: {hashed}")
-
-
