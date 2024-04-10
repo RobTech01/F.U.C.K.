@@ -6,6 +6,11 @@ path_to_your_hash_table = './storage/hash_table.enc'
 HASH_TABLE_FILE : str = path_to_your_hash_table
 
 
+def initialize_hash_table() -> dict:
+    """Initializes the hash table with necessary structure."""
+    return {"transaction_ids": set(), "categories": {}, "addresses": {}}
+
+
 def save_hash_table(hash_table : dict) -> None:
     """
     Encrypts and saves the hash table to a file. This function converts the hash table
@@ -29,7 +34,7 @@ def load_hash_table() -> dict:
     back into a dictionary.
     
     Returns:
-        dict: The decrypted hash table. If the file does not exist, returns an empty dictionary.
+        dict: The decrypted hash table. If the file does not exist, returns an initialized dictionary.
     """
     try:
         with open(HASH_TABLE_FILE, 'rb') as file:
@@ -37,7 +42,7 @@ def load_hash_table() -> dict:
         decrypted_data = cipher_suite.decrypt(encrypted_data)
         return json.loads(decrypted_data.decode())
     except FileNotFoundError:
-        return {}  # Return an empty hash table if file does not exist
+        return initialize_hash_table()  # Return an empty hash table if file does not exist    
 
 
 def test_secure_storage():

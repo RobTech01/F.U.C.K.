@@ -95,6 +95,21 @@ def decrypt_address(encrypted_address : str) -> str:
     return cipher_suite.decrypt(encrypted_address.encode()).decode()
 
 
+def hash_transaction_id(transaction_id: str) -> str:
+    """
+    Generates a unique hash for a transaction using low-sensitivity data.
+    
+    Args:
+        transaction (dict): Transaction data, containing keys like 'date', 'amount'.
+    
+    Returns:
+        str: A hexadecimal string representing the hashed transaction details.
+    """
+    hashed_details = hashlib.pbkdf2_hmac('sha256', transaction_id.encode(), SALT, 100000).hex()
+    return hashed_details
+
+
+
 def test_crypto_functions():
     """Prints messages to the console indicating the categorization status of the address.
         str: The original bank address after decryption.
