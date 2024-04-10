@@ -39,9 +39,6 @@ def load_hash_table() -> dict:
     except FileNotFoundError:
         return {}  # Return an empty hash table if file does not exist
 
-
-if __name__ == "__main__":
-    test_crypto_functions()
 def test_secure_storage():
     """
     Tests the functionality of secure storage by mocking a hash table, saving it,
