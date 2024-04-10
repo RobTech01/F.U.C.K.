@@ -1,7 +1,7 @@
 from package.crypto_utils import hash_address, encrypt_address
 
 
-def get_user_category():
+def get_user_category() -> int:
     """
     Interactively prompts the user to categorize a new bank address. 
     The user can select from a predefined list of categories or enter a new category.
@@ -86,8 +86,3 @@ def test_categorize_address():
     # Display the updated hash table
     print("\nUpdated Hash Table:")
     print(hash_table)
-
-
-
-if __name__ == "__main__":
-    test_categorize_address()
