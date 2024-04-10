@@ -3,10 +3,10 @@ import json
 
 
 path_to_your_hash_table = './storage/hash_table.enc'
-HASH_TABLE_FILE = path_to_your_hash_table
+HASH_TABLE_FILE : str = path_to_your_hash_table
 
 
-def save_hash_table(hash_table):
+def save_hash_table(hash_table : dict) -> None:
     """
     Encrypts and saves the hash table to a file. This function converts the hash table
     dictionary into a JSON string, encrypts it using the Fernet cipher suite, and writes
@@ -22,7 +22,7 @@ def save_hash_table(hash_table):
         file.write(encrypted_data)
 
 
-def load_hash_table():
+def load_hash_table() -> dict:
     """
     Loads and decrypts the hash table from a file. This function reads the encrypted data from
     the specified file, decrypts it using the Fernet cipher suite, and converts the JSON string
