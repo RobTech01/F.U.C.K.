@@ -39,6 +39,7 @@ def load_hash_table() -> dict:
     except FileNotFoundError:
         return {}  # Return an empty hash table if file does not exist
 
+
 def test_secure_storage():
     """
     Tests the functionality of secure storage by mocking a hash table, saving it,
