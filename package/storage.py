@@ -8,7 +8,7 @@ HASH_TABLE_FILE : str = path_to_your_hash_table
 
 def initialize_hash_table() -> dict:
     """Initializes the hash table with necessary structure."""
-    return {"transaction_ids": set(), "categories": {}, "addresses": {}}
+    return {"transaction_ids": [], "categories": {}, "addresses": {}}
 
 
 def save_hash_table(hash_table : dict) -> None:

@@ -107,7 +107,7 @@ def categorize_transaction(transaction : dict, hash_table : dict) -> None:
     # If the address is new or duplicate transaction is confirmed to be added
     if encrypted_hashed_address not in hash_table['addresses']:
         # Prompt for new category if the address is not recognized
-        print(f"New address detected: {transaction['address']}")
+        print(f"New address detected: {transaction['name']} {transaction['type']} {transaction['description']} {transaction['amount']}")
         category = get_user_category()
         hash_table['addresses'][encrypted_hashed_address] = category
         hash_table['categories'].setdefault(category, 0)
@@ -116,8 +116,8 @@ def categorize_transaction(transaction : dict, hash_table : dict) -> None:
         category = hash_table['addresses'][encrypted_hashed_address]
 
     # Update category total and transaction IDs
-    hash_table['categories'][category] += transaction['amount']
-    hash_table['transaction_ids'].add(hashed_transaction_id)  # Track this transaction ID to prevent future duplicates
+    hash_table['categories'][category] += transaction['amount'] if hash_table['categories'][category] else transaction['amount']
+    hash_table['transaction_ids'].append(hashed_transaction_id)  # Track this transaction ID to prevent future duplicates
 
     print(f"Transaction categorized under '{category}' with amount {transaction['amount']}.")
 
