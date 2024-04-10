@@ -7,7 +7,7 @@ def get_user_category() -> int:
     The user can select from a predefined list of categories or enter a new category.
 
     Returns:
-        str: The chosen or entered category for the bank address.
+  Returns       str: The chosen or entered category for the bank address.
     """
 
     print("\nPlease categorize the new bank address:")
