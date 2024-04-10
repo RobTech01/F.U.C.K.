@@ -43,7 +43,7 @@ def process_csv_file(filepath : str) -> None:
         for row in reader:
             date = row[date_col]
             address = row[address_col]
-            amount = row[amount_col]
+            amount = float(row[amount_col])
             name = row[name_col] if description_col >= 0 else ""
             type = row[type_col] if description_col >= 0 else ""
             description = row[description_col] if description_col >= 0 else ""
