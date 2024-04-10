@@ -40,6 +40,8 @@ def load_hash_table() -> dict:
         return {}  # Return an empty hash table if file does not exist
 
 
+if __name__ == "__main__":
+    test_crypto_functions()
 def test_secure_storage():
     """
     Tests the functionality of secure storage by mocking a hash table, saving it,
@@ -61,8 +63,3 @@ def test_secure_storage():
     
     print("Loaded Hash Table:")
     print(loaded_hash_table)
-
-
-
-if __name__ == "__main__":
-    test_secure_storage()
