@@ -42,7 +42,7 @@ def get_user_category() -> int:
         return get_user_category()  # Recursively prompt until valid input
 
 
-def categorize_address(address, amount, hash_table):
+def categorize_address(address : str, amount : float, hash_table : dict) -> None:
     """
     Modifies the hash_table in place to categorize the given address, adding the amount
     to the total for the category. If the address is new, prompts the user for the category.
