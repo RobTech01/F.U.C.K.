@@ -37,8 +37,6 @@ Currently only hashing and decrypting functionalities are fully implemented. Fut
 
 ## Configuration
 
-Your bank might order the .csv headers differently.. adjust the relevant indices accordingly in main.py
-
 For security reasons, you can set up environment variables for the encryption key and salt for hashing:
 
 - **Linux/Unix**: `export FUCK_GLOBAL_SALT=your_salt_here` and `export FUCK_ENCRYPTION_KEY=your_encryption_key_here`
