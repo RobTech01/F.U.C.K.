@@ -1,4 +1,4 @@
-from package.crypto_utils import hash_address, encrypt_address, hash_transaction_id
+from package.crypto_utils import hash_address, encrypt_address, hash_transaction_id, decrypt_address
 
 
 def get_user_category() -> str:
@@ -70,6 +70,25 @@ def user_confirm_action(prompt: str) -> bool:
     return response == 'y'
 
 
+def find_category_by_address(encrypted_hash : dict, target : str) -> str:
+    """
+    Decrypts encrypted addresses to find the category for a given target address.
+
+    Args:
+        encrypted_string (dict): Encrypted addresses as keys and categories as values.
+        target (str): The consistent text address to find the category for.
+
+    Returns:
+        str: The category for the target address, or None if not found.
+    """
+    for encrypted_key in encrypted_hash.keys():
+        decrypted_key = decrypt_address(encrypted_key)
+        if decrypted_key == target:
+            return encrypted_hash[encrypted_key]
+    return None
+
+
+
 def categorize_transaction(transaction : dict, hash_table : dict) -> None:
     """
     Modifies the hash_table in place to categorize the given address, adding the amount
@@ -85,41 +104,38 @@ def categorize_transaction(transaction : dict, hash_table : dict) -> None:
         raise TypeError("hash_table must be a dictionary.")
     
     if not isinstance(transaction, dict):
-        raise TypeError("hash_table must be a dictionary.")
+        raise TypeError("transaction must be a dictionary.")
     
-    # Assuming helper functions `encrypt_address`, `hash_address`, and `generate_transaction_id` are defined correctly
+    hashed_address = hash_address(transaction['address'])
     encrypted_hashed_address = encrypt_address(hash_address(transaction['address']))
-
-    # Generate and hash the transaction ID
     transaction_id = generate_transaction_id(transaction['date'], transaction['amount'])
-    hashed_transaction_id = hash_transaction_id(transaction_id)  # Ensure this function returns a hash string
+    hashed_transaction_id = hash_transaction_id(transaction_id)
 
-    if hashed_transaction_id in hash_table['transaction_ids']:
+    # Check for duplicate transactions
+    if hashed_transaction_id not in hash_table['transaction_ids']:
+        print(f"Adding new transaction with ID: {transaction_id}")
+        hash_table['transaction_ids'].append(hashed_transaction_id)
+    else:
         print(f"Potential duplicate transaction detected with ID: {transaction_id}")
         user_decision = input("Do you want to add this transaction anyway? (y/n): ").strip().lower()
         if user_decision != 'y':
             print("Transaction addition cancelled.")
             return
-        
-    print(f"adding new transaction with ID: {transaction_id}")
+    
+    # Handle the categorization based on the address
+    category = find_category_by_address(hash_table['addresses'], hashed_address)
 
-
-    # If the address is new or duplicate transaction is confirmed to be added
-    if encrypted_hashed_address not in hash_table['addresses']:
-        # Prompt for new category if the address is not recognized
+    if not category:
+        print(decrypt_address(encrypted_hashed_address))
         print(f"New address detected: {transaction['name']} {transaction['type']} {transaction['description']} {transaction['amount']}")
         category = get_user_category()
         hash_table['addresses'][encrypted_hashed_address] = category
-        hash_table['categories'].setdefault(category, 0)
-    else:
-        # Retrieve existing category for the address
-        category = hash_table['addresses'][encrypted_hashed_address]
+    
+    hash_table['categories'].setdefault(category, 0)
+    hash_table['categories'][category] += transaction['amount']
 
-    # Update category total and transaction IDs
-    hash_table['categories'][category] += transaction['amount'] if hash_table['categories'][category] else transaction['amount']
-    hash_table['transaction_ids'].append(hashed_transaction_id)  # Track this transaction ID to prevent future duplicates
+    print(f"Transaction categorized under '{category}' with amount {transaction['amount']}. New total for '{category}': {hash_table['categories'][category]}")
 
-    print(f"Transaction categorized under '{category}' with amount {transaction['amount']}.")
 
 
 def test_categorize_address():
