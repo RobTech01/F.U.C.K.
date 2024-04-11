@@ -88,7 +88,6 @@ def find_category_by_address(encrypted_hash : dict, target : str, cipher_suite) 
     return None
 
 
-
 def categorize_transaction(transaction : dict, hash_table : dict, cipher_suite, SALT) -> None:
     """
     Modifies the hash_table in place to categorize the given address, adding the amount
