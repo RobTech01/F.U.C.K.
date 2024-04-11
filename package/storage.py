@@ -43,7 +43,7 @@ def load_hash_table() -> dict:
         decrypted_data = cipher_suite.decrypt(encrypted_data)
         return json.loads(decrypted_data.decode())
     except FileNotFoundError:
-        return initialize_hash_table()  # Return an empty hash table if file does not exist    
+        return initialize_hash_table()  # Init an empty hash table if file does not exist    
     
 
 
@@ -57,17 +57,14 @@ def print_hash_table(hash_table: dict) -> None:
     """
     print("\nHash Table Contents:")
 
-    # Print Transaction IDs
     print("\nTransaction IDs:")
     for transaction_id in hash_table['transaction_ids']:
         print(f"- {transaction_id}")
 
-    # Print Categories and their totals
     print("\nCategories and Totals:")
     for category, total in hash_table['categories'].items():
         print(f"- {category}: {total}")
 
-    # Print Addresses and their categories
     print("\nAddresses and Categories:")
     for address, category in hash_table['addresses'].items():
         print(f"- {address}: {category}")
