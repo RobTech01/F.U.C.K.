@@ -10,6 +10,13 @@ The Fund Utilization and Categorization Kit (F.U.C.K.) is a locally run financia
 - **Transaction Categorization**: Automatically categorizes transactions from .csv bank statements based on previously encountered addresses, or asks for clarification for new addresses.
 - **Roadmap**: Future updates aim to introduce spending visualization, report cards, and extended categorized & "blended" data storage for long-term financial monitoring.
 
+## Quickstart to the App
+To test the data reading capabilities navigate to the folder and enter:
+```
+python3 -m package.read_data '/path/to/dummy-data/january.csv'
+```
+You can just drag and drop the file into most terminals and it will figure the path out for you.
+
 ## Installation
 
 Clone the repository and install dependencies:
