@@ -39,6 +39,7 @@ def load_hash_table() -> dict:
     try:
         with open(HASH_TABLE_FILE, 'rb') as file:
             encrypted_data = file.read()
+        print("Loading saved data..")
         decrypted_data = cipher_suite.decrypt(encrypted_data)
         return json.loads(decrypted_data.decode())
     except FileNotFoundError:
