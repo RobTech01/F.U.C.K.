@@ -15,7 +15,7 @@ To test the data reading capabilities navigate to the folder and enter:
 ```
 python3 -m package.read_data '/path/to/dummy-data/january.csv'
 ```
-You can just drag and drop the file into most terminals and it will figure the path out for you.
+You can just drag and drop your csv file into most terminals and it will figure the path out for you.
 
 ## Installation
 
