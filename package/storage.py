@@ -43,10 +43,6 @@ def load_hash_table(cipher_suite) -> dict:
         return json.loads(decrypted_data.decode())
     except FileNotFoundError:
         return initialize_hash_table()  # Init an empty hash table if file does not exist
-    
-
-
-    
 
 
 def print_hash_table(hash_table: dict) -> None:
@@ -72,7 +68,6 @@ def print_hash_table(hash_table: dict) -> None:
         print(f"- {address}: {category}")
 
     print()
-
 
 
 def test_secure_storage():
