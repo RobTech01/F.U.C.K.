@@ -1,6 +1,6 @@
 import csv
 from package.category_manager import categorize_transaction
-from package.storage import load_hash_table, save_hash_table
+from package.storage import load_hash_table, save_hash_table, print_hash_table
 from typing import Tuple, List
 
 
@@ -35,6 +35,7 @@ def user_confirm_action(prompt: str) -> bool:
 
 def process_csv_file(filepath : str) -> None:
     hash_table = load_hash_table()
+    #print_hash_table(hash_table)
     with open(filepath, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
         header = next(reader)
