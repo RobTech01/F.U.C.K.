@@ -70,7 +70,7 @@ def user_confirm_action(prompt: str) -> bool:
     return response == 'y'
 
 
-def find_category_by_address(encrypted_hash : dict, target : str) -> str:
+def find_category_by_address(encrypted_hash : dict, target : str, cipher_suite) -> str:
     """
     Decrypts encrypted addresses to find the category for a given target address.
 
@@ -82,14 +82,14 @@ def find_category_by_address(encrypted_hash : dict, target : str) -> str:
         str: The category for the target address, or None if not found.
     """
     for encrypted_key in encrypted_hash.keys():
-        decrypted_key = decrypt_address(encrypted_key)
+        decrypted_key = decrypt_address(encrypted_key, cipher_suite)
         if decrypted_key == target:
             return encrypted_hash[encrypted_key]
     return None
 
 
 
-def categorize_transaction(transaction : dict, hash_table : dict) -> None:
+def categorize_transaction(transaction : dict, hash_table : dict, cipher_suite, SALT) -> None:
     """
     Modifies the hash_table in place to categorize the given address, adding the amount
     to the total for the category. If the address is new, prompts the user for the category.
@@ -106,10 +106,10 @@ def categorize_transaction(transaction : dict, hash_table : dict) -> None:
     if not isinstance(transaction, dict):
         raise TypeError("transaction must be a dictionary.")
     
-    hashed_address = hash_address(transaction['address'])
-    encrypted_hashed_address = encrypt_address(hash_address(transaction['address']))
+    hashed_address = hash_address(transaction['address'], SALT)
+    encrypted_hashed_address = encrypt_address(hash_address(transaction['address'], SALT), cipher_suite)
     transaction_id = generate_transaction_id(transaction['date'], transaction['amount'])
-    hashed_transaction_id = hash_transaction_id(transaction_id)
+    hashed_transaction_id = hash_transaction_id(transaction_id, SALT)
 
     # Check for duplicate transactions
     if hashed_transaction_id not in hash_table['transaction_ids']:
@@ -123,10 +123,10 @@ def categorize_transaction(transaction : dict, hash_table : dict) -> None:
             return
     
     # Handle the categorization based on the address
-    category = find_category_by_address(hash_table['addresses'], hashed_address)
+    category = find_category_by_address(hash_table['addresses'], hashed_address, cipher_suite)
 
     if not category:
-        print(decrypt_address(encrypted_hashed_address))
+        print(decrypt_address(encrypted_hashed_address, cipher_suite))
         print(f"New address detected: {transaction['name']} {transaction['type']} {transaction['description']} {transaction['amount']}")
         category = get_user_category()
         hash_table['addresses'][encrypted_hashed_address] = category

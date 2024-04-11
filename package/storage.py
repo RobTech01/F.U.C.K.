@@ -1,4 +1,3 @@
-from package.crypto_utils import cipher_suite
 import json
 
 
@@ -11,7 +10,7 @@ def initialize_hash_table() -> dict:
     return {"transaction_ids": [], "categories": {}, "addresses": {}}
 
 
-def save_hash_table(hash_table : dict) -> None:
+def save_hash_table(hash_table : dict, cipher_suite) -> None:
     """
     Encrypts and saves the hash table to a file. This function converts the hash table
     dictionary into a JSON string, encrypts it using the Fernet cipher suite, and writes
@@ -27,7 +26,7 @@ def save_hash_table(hash_table : dict) -> None:
         file.write(encrypted_data)
 
 
-def load_hash_table() -> dict:
+def load_hash_table(cipher_suite) -> dict:
     """
     Loads and decrypts the hash table from a file. This function reads the encrypted data from
     the specified file, decrypts it using the Fernet cipher suite, and converts the JSON string
@@ -43,7 +42,10 @@ def load_hash_table() -> dict:
         decrypted_data = cipher_suite.decrypt(encrypted_data)
         return json.loads(decrypted_data.decode())
     except FileNotFoundError:
-        return initialize_hash_table()  # Init an empty hash table if file does not exist    
+        return initialize_hash_table()  # Init an empty hash table if file does not exist
+    
+
+
     
 
 

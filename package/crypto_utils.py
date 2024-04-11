@@ -29,32 +29,39 @@ def secure_input(prompt) -> None:
         return None
 
 
-# Attempt to load the salt and encryption key from environment variables
-SALT = os.environ.get('FUCK_GLOBAL_SALT')
-if not SALT:
-    print("No global salt found in environment variables.")
-    SALT = secure_input("Please paste the global salt here (Enter to skip): ")
-    if not SALT:  # If still not provided, generate new
-        SALT = os.urandom(16)
-        print(f"\nSuggested command to set the environment variable:\nexport FUCK_GLOBAL_SALT={SALT.hex()}")
-        print("or copy the sequence between the \' \' into your password manager \n")
+def initialize_crypto() -> list[Fernet, str]:
+    """
+    Initializes the cryptographic components by loading or prompting for the encryption key and salt.
+    Returns a Fernet cipher suite configured with the encryption key.
 
-ENCRYPTION_KEY = os.environ.get('FUCK_ENCRYPTION_KEY')
-if not ENCRYPTION_KEY:
-    print("No encryption key found in environment variables.")
-    ENCRYPTION_KEY = secure_input("Please paste the encryption key here (Enter to skip): ")
-    if not ENCRYPTION_KEY:  # If still not provided, generate new
-        ENCRYPTION_KEY = Fernet.generate_key()
-        print(f"\nSuggested command to set the environment variable:\nexport FUCK_ENCRYPTION_KEY={ENCRYPTION_KEY}")
-        print("or copy the sequence between the \' \' into your password manager \n")
+    Returns:
+        Fernet: A cipher suite object initialized with the encryption key.
+    """
+    # Load or prompt for the global salt
+    SALT = os.environ.get('FUCK_GLOBAL_SALT')
+    if not SALT:
+        SALT = secure_input("Please paste the global salt here (Enter to skip): ")
+        if not SALT:
+            SALT = os.urandom(16)
+            print(f"\nSuggested command to set the environment variable:\nexport FUCK_GLOBAL_SALT={SALT.hex()}")
 
-# Convert hex salt to bytes and ensure key is in bytes for Fernet
-SALT = bytes.fromhex(SALT) if isinstance(SALT, str) else SALT
-ENCRYPTION_KEY = ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY
-cipher_suite = Fernet(ENCRYPTION_KEY)
+    # Load or prompt for the encryption key
+    ENCRYPTION_KEY = os.environ.get('FUCK_ENCRYPTION_KEY')
+    if not ENCRYPTION_KEY:
+        ENCRYPTION_KEY = secure_input("Please paste the encryption key here (Enter to skip): ")
+        if not ENCRYPTION_KEY:
+            ENCRYPTION_KEY = Fernet.generate_key()
+            print(f"\nSuggested command to set the environment variable:\nexport FUCK_ENCRYPTION_KEY={ENCRYPTION_KEY.decode()}")
+
+    # Ensure the types are correct for cryptographic operations
+    SALT = bytes.fromhex(SALT) if isinstance(SALT, str) else SALT
+    ENCRYPTION_KEY = ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY
+
+    # Initialize and return the cipher suite
+    return Fernet(ENCRYPTION_KEY), SALT
 
 
-def hash_address(address : str) -> str:
+def hash_address(address : str, SALT) -> str:
     """
     Hashes a bank address using a globally defined salt. This function uses PBKDF2_HMAC with
     SHA-256 hash function to create a secure hash of the input address.
@@ -68,7 +75,7 @@ def hash_address(address : str) -> str:
     return hashlib.pbkdf2_hmac('sha256', address.encode(), SALT, 100000).hex()
 
 
-def encrypt_address(address : str) -> str:
+def encrypt_address(address : str, cipher_suite) -> str:
     """
     Encrypts a bank address using the Fernet symmetric encryption, relying on a pre-defined
     global encryption key.
@@ -82,7 +89,7 @@ def encrypt_address(address : str) -> str:
     return cipher_suite.encrypt(address.encode()).decode()
 
 
-def decrypt_address(encrypted_address : str) -> str:
+def decrypt_address(encrypted_address : str, cipher_suite) -> str:
     """
     Decrypts a previously encrypted bank address, using the same global encryption key.
     
@@ -95,7 +102,7 @@ def decrypt_address(encrypted_address : str) -> str:
     return cipher_suite.decrypt(encrypted_address.encode()).decode()
 
 
-def hash_transaction_id(transaction_id: str) -> str:
+def hash_transaction_id(transaction_id: str, SALT) -> str:
     """
     Generates a unique hash for a transaction using low-sensitivity data.
     
@@ -122,5 +129,5 @@ def test_crypto_functions():
     print(f"Decrypted: {decrypted}")
 
     print("\nTesting Hashing:")
-    hashed = hash_address(test_address)
+    hashed = hash_address(test_address, SALT)
     print(f"Hashed: {hashed}")
