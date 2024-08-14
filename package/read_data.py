@@ -1,8 +1,8 @@
 import csv
 import argparse
-from package.category_manager import categorize_transaction
-from package.crypto_utils import initialize_crypto
-from package.storage import load_hash_table, save_hash_table, print_hash_table
+from category_manager import categorize_transaction
+from crypto_utils import initialize_crypto
+from storage import load_hash_table, save_hash_table, print_hash_table
 from typing import Tuple, List
 
 
@@ -54,22 +54,20 @@ def process_csv_file(filepath : str, hash_table : dict, cipher_suite, SALT) -> N
             categorize_transaction(transaction, hash_table, cipher_suite, SALT)
 
 
-def main(csv_file_path: str):
-    cipher_suite, SALT = initialize_crypto()
-    hash_table = load_hash_table(cipher_suite)
-    print("Table loaded successfully.")
-
-    process_csv_file(csv_file_path, hash_table, cipher_suite, SALT)
-    print("CSV file processed successfully.")
-
-    save_hash_table(hash_table, cipher_suite)
-    print("File saved successfully.")
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a new data file and categorize transactions.")
     parser.add_argument("csv_file_path", type=str, default = '../dummy-data/january.csv')
 
     args = parser.parse_args()
 
-    main(args.csv_file_path)
+    cipher_suite, SALT = initialize_crypto()
+    hash_table = load_hash_table(cipher_suite)
+    print("Table loaded successfully.")
+
+    process_csv_file(args.csv_file_path, hash_table, cipher_suite, SALT)
+    print("CSV file processed successfully.")
+
+    save_hash_table(hash_table, cipher_suite)
+    print("File saved successfully.")
+
+

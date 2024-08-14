@@ -1,4 +1,4 @@
-from package.crypto_utils import hash_address, encrypt_address, hash_transaction_id, decrypt_address
+from crypto_utils import hash_address, encrypt_address, hash_transaction_id, decrypt_address
 
 
 def get_user_category() -> str:

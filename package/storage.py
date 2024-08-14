@@ -69,6 +69,10 @@ def print_hash_table(hash_table: dict) -> None:
 
     print()
 
+def get_categories_and_totals(hash_table: dict) -> dict:
+    print(hash_table["categories"])
+    return hash_table["categories"]
+
 
 def test_secure_storage():
     """
