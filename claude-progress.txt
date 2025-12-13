@@ -1,0 +1,127 @@
+=== F.U.C.K. UX Improvements Progress ===
+
+Following Anthropic's effective harness methodology
+Branch: claude/plan-ux-improvements-01MqAaCghEdYJojN4QS4JWpr
+Started: 2025-12-13
+
+---
+
+PLANNING PHASE ✓ COMPLETE
+[✓] Analyzed codebase architecture
+[✓] Identified UX pain points through code review
+[✓] Reviewed current user workflows
+[✓] Prioritized improvements by impact/complexity
+[✓] Created session-based implementation plan
+[✓] Defined success metrics and testing strategy
+
+---
+
+IMPLEMENTATION SESSIONS
+
+Session 1: Transaction Review & Confirmation [P0]
+Status: NOT STARTED
+Deliverables:
+  [ ] Add --review flag to process command
+  [ ] Implement display_review() function
+  [ ] Add confirm_processing() function
+  [ ] Write unit tests for review workflow
+  [ ] Manual test: Process CSV with review
+  [ ] Git commit: "feat: Add transaction review before saving"
+
+Session 2: Fix Categorization Mistakes [P0]
+Status: NOT STARTED
+Deliverables:
+  [ ] Add cmd_edit() handler to main.py
+  [ ] Implement recategorize_address() function
+  [ ] Add select_transaction_to_edit() CLI function
+  [ ] Write unit tests for edit operations
+  [ ] Write integration test for edit workflow
+  [ ] Git commit: "feat: Add edit command for fixing categorization mistakes"
+
+Session 3: Enhanced View with Filters [P1]
+Status: NOT STARTED
+Deliverables:
+  [ ] Add filter arguments to view_parser
+  [ ] Implement filter_transactions() function
+  [ ] Add format_filtered_results() function
+  [ ] Write unit tests for filtering logic
+  [ ] Manual test: View with various filters
+  [ ] Git commit: "feat: Add filtering options to view command"
+
+Session 4: Data Export Capability [P1]
+Status: NOT STARTED
+Deliverables:
+  [ ] Add cmd_export() handler
+  [ ] Create package/export.py module
+  [ ] Implement CSV/JSON/TXT export functions
+  [ ] Write unit tests for export formats
+  [ ] Manual test: Export and verify in Excel
+  [ ] Git commit: "feat: Add data export with CSV, JSON, TXT formats"
+
+Session 5: Better Error Reporting [P1]
+Status: NOT STARTED
+Deliverables:
+  [ ] Add ValidationError exception with details
+  [ ] Track line numbers and error types in read_data.py
+  [ ] Implement print_validation_summary() function
+  [ ] Add --strict flag to process command
+  [ ] Manual test: Process CSV with intentional errors
+  [ ] Git commit: "feat: Add detailed validation error reporting"
+
+Session 6: Spending Insights & Reports [P2]
+Status: NOT STARTED
+Deliverables:
+  [ ] Add cmd_report() handler
+  [ ] Create package/reports.py module
+  [ ] Create package/visualization.py for ASCII charts
+  [ ] Implement monthly/category/trends reports
+  [ ] Write unit tests for report calculations
+  [ ] Manual test: Generate all report types
+  [ ] Git commit: "feat: Add spending insights and reports"
+
+Session 7: Bulk Operations [P2]
+Status: NOT STARTED
+Deliverables:
+  [ ] Add cmd_bulk_edit() handler
+  [ ] Implement bulk_recategorize() function
+  [ ] Add preview_bulk_changes() function
+  [ ] Write unit tests for pattern matching
+  [ ] Write integration test for bulk operations
+  [ ] Git commit: "feat: Add bulk recategorization operations"
+
+Session 8: Interactive Help & Onboarding [P2]
+Status: NOT STARTED
+Deliverables:
+  [ ] Add cmd_help() and cmd_init() handlers
+  [ ] Create package/help.py module
+  [ ] Implement run_setup_wizard() function
+  [ ] Update README.md with help examples
+  [ ] Manual test: New user onboarding flow
+  [ ] Git commit: "feat: Add interactive help and setup wizard"
+
+---
+
+COMPLETION STATUS: 0/8 sessions complete (0%)
+
+Planning: 100% ✓
+Implementation: 0%
+Testing: 0%
+Documentation: 0%
+
+---
+
+NEXT ACTION: Start Session 1 - Transaction Review & Confirmation
+
+Expected deliverables:
+1. --review flag on process command
+2. Interactive review screen showing all transactions
+3. Confirm/cancel/edit options
+4. Unit tests for review workflow
+5. Manual test procedure documented
+
+Estimated time: 1-2 hours
+
+---
+
+Last updated: 2025-12-13
+Updated by: Planning phase completed
