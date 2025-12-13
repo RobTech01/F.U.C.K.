@@ -1,8 +1,8 @@
 import csv
 import argparse
-from category_manager import categorize_transaction
-from crypto_utils import initialize_crypto
-from storage import load_hash_table, save_hash_table, print_hash_table
+from .category_manager import categorize_transaction
+from .crypto_utils import initialize_crypto
+from .storage import load_hash_table, save_hash_table, print_hash_table
 from typing import Tuple, List
 
 
@@ -19,20 +19,6 @@ def select_csv_columns(header : List[str]) -> Tuple[int, int, int, int, int, int
     amount_col : int = int(input("Amount column: ")) - 1
 
     return date_col, address_col, amount_col, name_col, type_col, description_col
-
-
-def user_confirm_action(prompt: str) -> bool:
-    """
-    Prompts the user with a yes/no question and returns the user's decision.
-    
-    Args:
-        prompt (str): The prompt to display to the user.
-    
-    Returns:
-        bool: True if the user confirms (yes), False otherwise (no).
-    """
-    response = input(f"{prompt} (y/n): ").strip().lower()
-    return response == 'y'
 
 
 def process_csv_file(filepath : str, hash_table : dict, cipher_suite, SALT) -> None:

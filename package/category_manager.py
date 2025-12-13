@@ -1,4 +1,4 @@
-from crypto_utils import hash_address, encrypt_address, hash_transaction_id, decrypt_address
+from .crypto_utils import hash_address, encrypt_address, hash_transaction_id, decrypt_address
 
 
 def get_user_category() -> str:
@@ -20,7 +20,7 @@ def get_user_category() -> str:
         'Savings',
         'Stable Investments',
         'High-Risk Investments',
-        'Arbitrage/Resale Profits'
+        'Arbitrage/Resale Profits',
         'Retirement',
         'Entertainment/Leisure',
         'Health & Wellness',
@@ -36,38 +36,27 @@ def get_user_category() -> str:
     if user_input.isdigit() and 1 <= int(user_input) <= len(categories):
         return categories[int(user_input) - 1]
     elif user_input:
-        return categories[user_input]
+        return user_input  # Return custom category name
     else:
         print("Invalid input.")
         return get_user_category()  # Recursively prompt until valid input
 
 
-def generate_transaction_id(date : str, amount: float) -> str:
+def generate_transaction_id(date : str, amount: float, hashed_address: str = "") -> str:
     """
-    Generates a ID for a transaction using its date, address, and amount.
-    
+    Generates a unique ID for a transaction using its date, amount, and address hash.
+
     Args:
-        transaction (dict): Transaction data.
-    
+        date (str): Transaction date.
+        amount (float): Transaction amount.
+        hashed_address (str): Hashed address for uniqueness (optional, first 8 chars used).
+
     Returns:
         str: A string representing the transaction ID.
     """
-    transaction_str = f"{date}-{amount}"
+    address_prefix = hashed_address[:8] if hashed_address else ""
+    transaction_str = f"{date}-{address_prefix}-{amount}"
     return transaction_str
-
-
-def user_confirm_action(prompt: str) -> bool:
-    """
-    Prompts the user with a yes/no question and returns the user's decision.
-    
-    Args:
-        prompt (str): The prompt to display to the user.
-    
-    Returns:
-        bool: True if the user confirms (yes), False otherwise (no).
-    """
-    response = input(f"{prompt} (y/n): ").strip().lower()
-    return response == 'y'
 
 
 def find_category_by_address(encrypted_hash : dict, target : str, cipher_suite) -> str:
@@ -107,7 +96,7 @@ def categorize_transaction(transaction : dict, hash_table : dict, cipher_suite, 
     
     hashed_address = hash_address(transaction['address'], SALT)
     encrypted_hashed_address = encrypt_address(hash_address(transaction['address'], SALT), cipher_suite)
-    transaction_id = generate_transaction_id(transaction['date'], transaction['amount'])
+    transaction_id = generate_transaction_id(transaction['date'], transaction['amount'], hashed_address)
     hashed_transaction_id = hash_transaction_id(transaction_id, SALT)
 
     # Check for duplicate transactions
