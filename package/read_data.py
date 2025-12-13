@@ -10,7 +10,7 @@ from .config import Config, get_bank_identifier
 from typing import Tuple, List, Dict
 
 
-def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT, review: bool = True) -> Dict[str, int]:
+def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT, review: bool = True, strict: bool = False) -> Dict[str, int]:
     """
     Process a CSV file and categorize all transactions.
 
@@ -20,20 +20,24 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT, review
         cipher_suite: Encryption cipher
         SALT: Salt for hashing
         review: Whether to show review screen before saving (default: True)
+        strict: Whether to fail on first validation error (default: False)
 
     Returns:
-        Dict with statistics: {'total': int, 'processed': int, 'skipped': int, 'errors': int}
+        Dict with statistics: {'total': int, 'processed': int, 'skipped': int, 'errors': int, 'validation_errors': List}
 
     Raises:
         FileNotFoundError: If CSV file doesn't exist
         ValueError: If CSV file is invalid or malformed
+        ValidationError: If strict=True and a validation error occurs
     """
+    from .core import ValidationError
+
     # Validate CSV file first
     is_valid, error_msg = validate_csv_file(filepath)
     if not is_valid:
         raise ValueError(f"Invalid CSV file: {error_msg}")
 
-    stats = {'total': 0, 'processed': 0, 'skipped': 0, 'errors': 0}
+    stats = {'total': 0, 'processed': 0, 'skipped': 0, 'errors': 0, 'validation_errors': []}
 
     # Create temporary hash table for review mode
     if review:
@@ -107,8 +111,16 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT, review
 
                 # Validate row length
                 if len(row) < len(header):
-                    print(f"Warning: Row {row_num} has fewer columns than header, skipping")
+                    error = ValidationError(
+                        f"Row has fewer columns than header ({len(row)} < {len(header)})",
+                        line_number=row_num,
+                        error_type='missing_columns'
+                    )
+                    stats['validation_errors'].append(error)
+                    print(f"Warning: {error}")
                     stats['skipped'] += 1
+                    if strict:
+                        raise error
                     continue
 
                 try:
@@ -121,8 +133,18 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT, review
                     try:
                         amount = float(amount_str.replace(',', '.'))
                     except ValueError:
-                        print(f"Warning: Row {row_num} has invalid amount '{amount_str}', skipping")
+                        error = ValidationError(
+                            f"Invalid amount value: '{amount_str}'",
+                            line_number=row_num,
+                            error_type='invalid_amount',
+                            field='amount',
+                            value=amount_str
+                        )
+                        stats['validation_errors'].append(error)
+                        print(f"Warning: {error}")
                         stats['skipped'] += 1
+                        if strict:
+                            raise error
                         continue
 
                     # Extract optional fields
@@ -146,8 +168,29 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT, review
                     # Validate transaction
                     is_valid, error_msg = validate_transaction(transaction)
                     if not is_valid:
-                        print(f"Warning: Row {row_num} invalid: {error_msg}, skipping")
+                        # Determine error type from message
+                        error_type = 'validation_error'
+                        if 'amount' in error_msg.lower():
+                            error_type = 'invalid_amount'
+                        elif 'date' in error_msg.lower():
+                            error_type = 'invalid_date'
+                        elif 'address' in error_msg.lower():
+                            error_type = 'invalid_address'
+                        elif 'missing' in error_msg.lower():
+                            error_type = 'missing_field'
+                        elif 'suspicious' in error_msg.lower():
+                            error_type = 'suspicious_content'
+
+                        error = ValidationError(
+                            error_msg,
+                            line_number=row_num,
+                            error_type=error_type
+                        )
+                        stats['validation_errors'].append(error)
+                        print(f"Warning: {error}")
                         stats['skipped'] += 1
+                        if strict:
+                            raise error
                         continue
 
                     # Categorize transaction (into temp table if review mode)
@@ -169,8 +212,16 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT, review
                         })
 
                 except IndexError as e:
-                    print(f"Warning: Row {row_num} has column access error: {e}, skipping")
+                    error = ValidationError(
+                        f"Column access error: {e}",
+                        line_number=row_num,
+                        error_type='column_access_error'
+                    )
+                    stats['validation_errors'].append(error)
+                    print(f"Warning: {error}")
                     stats['skipped'] += 1
+                    if strict:
+                        raise error
                 except Exception as e:
                     print(f"Error processing row {row_num}: {e}")
                     stats['errors'] += 1
@@ -180,6 +231,10 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT, review
 
             # Print summary
             cli.print_summary(stats['total'], stats['processed'], stats['skipped'])
+
+            # Print validation errors summary if any errors occurred
+            if stats['validation_errors']:
+                cli.print_validation_summary(stats['validation_errors'])
 
             # Review mode: Show review screen and get confirmation
             if review and stats['processed'] > 0:

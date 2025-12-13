@@ -17,6 +17,7 @@ from package import (
 from package.storage import print_hash_table, get_categories_and_totals, filter_categories
 from package.category_manager import search_addresses, recategorize_address, get_all_addresses_with_categories, bulk_recategorize
 from package import reports
+from package import export as export_module
 
 
 def cmd_process(args):
@@ -53,7 +54,8 @@ def cmd_process(args):
     # Process CSV file with comprehensive error handling
     try:
         enable_review = not args.no_review
-        stats = process_csv_file(args.csv_file, hash_table, cipher_suite, SALT, review=enable_review)
+        strict_mode = args.strict if hasattr(args, 'strict') else False
+        stats = process_csv_file(args.csv_file, hash_table, cipher_suite, SALT, review=enable_review, strict=strict_mode)
         print(f"\n✓ CSV file processed successfully.")
         print(f"  Processed: {stats['processed']}/{stats['total']} transactions")
         if stats['skipped'] > 0:
@@ -517,6 +519,91 @@ def cmd_init(args):
         return 1
 
 
+def cmd_export(args):
+    """Export category data to file in specified format."""
+    print(f"Exporting data to {args.format.upper()} format...")
+
+    # Initialize crypto with error handling
+    try:
+        cipher_suite, SALT = initialize_crypto()
+    except KeyboardInterrupt:
+        print("\nCrypto initialization cancelled by user")
+        return 130
+    except Exception as e:
+        print(f"Error initializing crypto: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+    # Load hash table with error handling
+    try:
+        hash_table = load_hash_table(cipher_suite)
+    except FileNotFoundError:
+        print("✗ Error: No hash table found. Process a CSV file first.")
+        return 1
+    except Exception as e:
+        print(f"✗ Error loading hash table: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+    try:
+        categories = hash_table.get('categories', {})
+
+        if not categories:
+            print("\nNo category data available for export.")
+            print("Process some transactions first with: python3 main.py process <csv_file>")
+            return 1
+
+        # Apply filters if specified (reuse filtering from Session 3)
+        if args.category or args.min_amount is not None or args.max_amount is not None:
+            print("Applying filters...")
+            categories = filter_categories(
+                hash_table,
+                category_filter=args.category,
+                min_amount=args.min_amount,
+                max_amount=args.max_amount
+            )
+
+            if not categories:
+                print("✗ No categories match the specified filters.")
+                return 1
+
+            filters_applied = []
+            if args.category:
+                filters_applied.append(f"category='{args.category}'")
+            if args.min_amount is not None:
+                filters_applied.append(f"min=${args.min_amount:.2f}")
+            if args.max_amount is not None:
+                filters_applied.append(f"max=${args.max_amount:.2f}")
+            print(f"  Filters: {', '.join(filters_applied)}")
+            print(f"  Matching categories: {len(categories)}")
+
+        # Export data
+        output_file = export_module.export_categories(
+            categories,
+            format_type=args.format,
+            output_file=args.output
+        )
+
+        print(f"✓ Successfully exported {len(categories)} categor{'y' if len(categories) == 1 else 'ies'}")
+        print(f"✓ Output file: {output_file}")
+
+        return 0
+
+    except ValueError as e:
+        print(f"✗ Export error: {e}")
+        return 1
+    except Exception as e:
+        print(f"✗ Error during export: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -553,6 +640,11 @@ Examples:
         '--no-review',
         action='store_true',
         help='Skip transaction review (save immediately)'
+    )
+    process_parser.add_argument(
+        '--strict',
+        action='store_true',
+        help='Fail on first validation error instead of skipping invalid transactions'
     )
     process_parser.set_defaults(func=cmd_process)
 
@@ -679,6 +771,40 @@ Examples:
         help='Run interactive setup wizard for new users'
     )
     init_parser.set_defaults(func=cmd_init)
+
+    # Export command
+    export_parser = subparsers.add_parser(
+        'export',
+        help='Export category data to file'
+    )
+    export_parser.add_argument(
+        '--format',
+        type=str,
+        choices=['csv', 'json', 'txt'],
+        default='csv',
+        help='Export format (default: csv)'
+    )
+    export_parser.add_argument(
+        '--output',
+        type=str,
+        help='Output filename (default: auto-generated with timestamp)'
+    )
+    export_parser.add_argument(
+        '--category',
+        type=str,
+        help='Filter by category (case-insensitive substring match)'
+    )
+    export_parser.add_argument(
+        '--min-amount',
+        type=float,
+        help='Filter by minimum amount'
+    )
+    export_parser.add_argument(
+        '--max-amount',
+        type=float,
+        help='Filter by maximum amount'
+    )
+    export_parser.set_defaults(func=cmd_export)
 
     # Parse arguments
     args = parser.parse_args()
