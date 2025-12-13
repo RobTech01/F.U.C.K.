@@ -133,22 +133,22 @@
           "id": "4.1",
           "description": "Add input sanitization for CSV content",
           "file": "package/core.py",
-          "implemented": false,
-          "tested": false
+          "implemented": true,
+          "tested": true
         },
         {
           "id": "4.2",
           "description": "Validate and sanitize file paths",
           "file": "package/core.py",
-          "implemented": false,
-          "tested": false
+          "implemented": true,
+          "tested": true
         },
         {
           "id": "4.3",
           "description": "Add .env file support for secrets",
           "file": "package/config.py",
-          "implemented": false,
-          "tested": false
+          "implemented": true,
+          "tested": true
         }
       ]
     },
@@ -209,8 +209,8 @@
   },
   "progress": {
     "total_tasks": 25,
-    "implemented": 15,
-    "tested": 15,
-    "completion_percentage": 60
+    "implemented": 18,
+    "tested": 18,
+    "completion_percentage": 72
   }
 }

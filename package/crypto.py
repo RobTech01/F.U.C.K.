@@ -1,44 +1,90 @@
 import os
 from cryptography.fernet import Fernet
 import hashlib
+from pathlib import Path
 from . import cli
 
 # This script demonstrates how to securely hash and encrypt data, specifically bank addresses,
 # using a global salt and encryption key. These keys should ideally be stored and fetched from
 # a secure location or environment variables for enhanced security.
 #
-# Environment Variable Setup Example:
-# - Linux/Unix: Use the command `export GLOBAL_SALT=your_byte_string_here` and
-#   `export ENCRYPTION_KEY=your_encryption_key_here` to set these variables.
-# - Windows: Use `set GLOBAL_SALT=your_byte_string_here` and
-#   `set ENCRYPTION_KEY=your_encryption_key_here` in the command prompt.
+# Environment Variable Setup:
+# 1. Create a .env file in the project root with:
+#    FUCK_GLOBAL_SALT=your_32_char_hex_string
+#    FUCK_ENCRYPTION_KEY=your_44_char_fernet_key
 #
-# Note: `os.urandom(16)` generates a 16-byte random value which is suitable for cryptographic use
-# as a fallback for both the salt and the encryption key. However, it's recommended to have consistent
-# values especially for the salt to ensure hash consistency across application runs.
+# 2. Or use system environment variables:
+#    - Linux/Unix: export FUCK_GLOBAL_SALT=... && export FUCK_ENCRYPTION_KEY=...
+#    - Windows: set FUCK_GLOBAL_SALT=... && set FUCK_ENCRYPTION_KEY=...
+
+
+def load_env_file():
+    """
+    Load environment variables from .env file if it exists.
+    Provides simple .env file support without external dependencies.
+    """
+    env_file = Path('.env')
+    if not env_file.exists():
+        return
+
+    try:
+        with open(env_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                # Skip comments and empty lines
+                if not line or line.startswith('#'):
+                    continue
+                # Parse KEY=VALUE format
+                if '=' in line:
+                    key, value = line.split('=', 1)
+                    key = key.strip()
+                    value = value.strip()
+                    # Remove quotes if present
+                    if value.startswith('"') and value.endswith('"'):
+                        value = value[1:-1]
+                    elif value.startswith("'") and value.endswith("'"):
+                        value = value[1:-1]
+                    # Set environment variable only if not already set
+                    if key not in os.environ:
+                        os.environ[key] = value
+    except Exception as e:
+        print(f"Warning: Could not load .env file: {e}")
 
 
 def initialize_crypto() -> list[Fernet, str]:
     """
     Initializes the cryptographic components by loading or prompting for the encryption key and salt.
-    Returns a Fernet cipher suite configured with the encryption key.
+    Loads from .env file first, then environment variables, then prompts user.
 
     Returns:
         Tuple[Fernet, bytes]: A cipher suite object and the salt
     """
+    # Load .env file if it exists
+    load_env_file()
+
     # Load or prompt for the global salt
     SALT = os.environ.get('FUCK_GLOBAL_SALT')
     if not SALT:
         SALT = cli.prompt_for_salt()
     else:
-        SALT = bytes.fromhex(SALT)
+        try:
+            SALT = bytes.fromhex(SALT)
+        except ValueError:
+            print("Warning: Invalid FUCK_GLOBAL_SALT in environment, generating new salt")
+            SALT = cli.prompt_for_salt()
 
     # Load or prompt for the encryption key
     ENCRYPTION_KEY = os.environ.get('FUCK_ENCRYPTION_KEY')
     if not ENCRYPTION_KEY:
         ENCRYPTION_KEY = cli.prompt_for_encryption_key()
     else:
-        ENCRYPTION_KEY = ENCRYPTION_KEY.encode()
+        try:
+            ENCRYPTION_KEY = ENCRYPTION_KEY.encode()
+            # Validate it's a proper Fernet key
+            Fernet(ENCRYPTION_KEY)
+        except Exception:
+            print("Warning: Invalid FUCK_ENCRYPTION_KEY in environment, generating new key")
+            ENCRYPTION_KEY = cli.prompt_for_encryption_key()
 
     # Initialize and return the cipher suite
     return Fernet(ENCRYPTION_KEY), SALT

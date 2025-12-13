@@ -4,7 +4,7 @@ from .category_manager import categorize_transaction
 from .crypto import initialize_crypto
 from .storage import load_hash_table, save_hash_table, print_hash_table
 from . import cli
-from .core import validate_csv_file, validate_transaction, parse_csv_row
+from .core import validate_csv_file, validate_transaction, parse_csv_row, sanitize_transaction
 from typing import Tuple, List, Dict
 
 
@@ -93,6 +93,9 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT) -> Dic
                         'type': trans_type,
                         'description': description
                     }
+
+                    # Sanitize transaction data
+                    transaction = sanitize_transaction(transaction)
 
                     # Validate transaction
                     is_valid, error_msg = validate_transaction(transaction)
