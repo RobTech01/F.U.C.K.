@@ -446,3 +446,51 @@ def prompt_for_new_category(current_category: str, available_categories: List[st
             return user_input
         else:
             print("Invalid input. Please enter a category number, name, or 'c' to cancel.")
+
+
+def display_filtered_categories(
+    categories: Dict[str, float],
+    filters_applied: Dict[str, any] = None
+) -> None:
+    """
+    Display filtered category totals.
+
+    Args:
+        categories: Dictionary of categories and their totals
+        filters_applied: Dictionary of filters that were applied (for display)
+    """
+    print("\n" + "="*80)
+
+    # Show filters if any were applied
+    if filters_applied and any(filters_applied.values()):
+        print("FILTERED CATEGORY TOTALS")
+        print("="*80)
+        print("Filters applied:")
+        if filters_applied.get('category'):
+            print(f"  - Category contains: '{filters_applied['category']}'")
+        if filters_applied.get('min_amount') is not None:
+            print(f"  - Minimum amount: ${filters_applied['min_amount']:.2f}")
+        if filters_applied.get('max_amount') is not None:
+            print(f"  - Maximum amount: ${filters_applied['max_amount']:.2f}")
+        print("-" * 80)
+    else:
+        print("CATEGORY TOTALS")
+        print("="*80)
+
+    if not categories:
+        print("No categories match the specified filters.")
+        print("="*80)
+        return
+
+    # Calculate grand total
+    grand_total = sum(categories.values())
+
+    # Display categories sorted alphabetically
+    for category in sorted(categories.keys()):
+        total = categories[category]
+        print(f"{category:<50} ${total:>12.2f}")
+
+    print("-" * 80)
+    print(f"{'TOTAL':<50} ${grand_total:>12.2f}")
+    print("="*80)
+    print(f"\nShowing {len(categories)} categor{'y' if len(categories) == 1 else 'ies'}")

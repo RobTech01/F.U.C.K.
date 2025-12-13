@@ -14,7 +14,7 @@ from package import (
     Config,
     cli
 )
-from package.storage import print_hash_table, get_categories_and_totals
+from package.storage import print_hash_table, get_categories_and_totals, filter_categories
 from package.category_manager import search_addresses, recategorize_address, get_all_addresses_with_categories
 
 
@@ -136,12 +136,37 @@ def cmd_view(args):
             traceback.print_exc()
         return 1
 
+    # Check if any filters are applied
+    has_filters = args.category or args.min_amount is not None or args.max_amount is not None
+
     # Display data with error handling
     try:
         if args.all:
+            # Full hash table display (doesn't support filters)
+            if has_filters:
+                print("Warning: --all mode doesn't support filters. Showing all data.")
             print_hash_table(hash_table)
+        elif has_filters:
+            # Apply filters and display
+            filtered_categories = filter_categories(
+                hash_table,
+                category_filter=args.category,
+                min_amount=args.min_amount,
+                max_amount=args.max_amount
+            )
+
+            filters_info = {
+                'category': args.category,
+                'min_amount': args.min_amount,
+                'max_amount': args.max_amount
+            }
+
+            cli.display_filtered_categories(filtered_categories, filters_info)
         else:
+            # No filters, show all categories
             categories = get_categories_and_totals(hash_table)
+            # Display using the same function but without filter info
+            cli.display_filtered_categories(categories)
     except Exception as e:
         print(f"✗ Error displaying data: {e}")
         if args.verbose:
@@ -344,6 +369,21 @@ Examples:
         '--all',
         action='store_true',
         help='Show all details including addresses'
+    )
+    view_parser.add_argument(
+        '--category',
+        type=str,
+        help='Filter by category (case-insensitive substring match)'
+    )
+    view_parser.add_argument(
+        '--min-amount',
+        type=float,
+        help='Filter by minimum transaction amount'
+    )
+    view_parser.add_argument(
+        '--max-amount',
+        type=float,
+        help='Filter by maximum transaction amount'
     )
     view_parser.set_defaults(func=cmd_view)
 

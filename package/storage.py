@@ -74,6 +74,45 @@ def get_categories_and_totals(hash_table: dict) -> dict:
     return hash_table["categories"]
 
 
+def filter_categories(
+    hash_table: dict,
+    category_filter: str = None,
+    min_amount: float = None,
+    max_amount: float = None
+) -> dict:
+    """
+    Filter categories based on criteria.
+
+    Args:
+        hash_table: Hash table containing categories
+        category_filter: Category name substring (case-insensitive)
+        min_amount: Minimum category total
+        max_amount: Maximum category total
+
+    Returns:
+        Filtered dictionary of categories and their totals
+    """
+    categories = hash_table.get('categories', {})
+    filtered = {}
+
+    for category, total in categories.items():
+        # Filter by category name
+        if category_filter and category_filter.lower() not in category.lower():
+            continue
+
+        # Filter by minimum amount
+        if min_amount is not None and total < min_amount:
+            continue
+
+        # Filter by maximum amount
+        if max_amount is not None and total > max_amount:
+            continue
+
+        filtered[category] = total
+
+    return filtered
+
+
 def test_secure_storage():
     """
     Tests the functionality of secure storage by mocking a hash table, saving it,
