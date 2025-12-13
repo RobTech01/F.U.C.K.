@@ -8,6 +8,33 @@ import csv
 from pathlib import Path
 
 
+class ValidationError(Exception):
+    """
+    Custom exception for transaction validation errors with detailed information.
+
+    Attributes:
+        message: Human-readable error message
+        line_number: Line number in CSV file (1-indexed)
+        error_type: Type of validation error (e.g., 'invalid_amount', 'missing_field')
+        field: Field that caused the error (optional)
+        value: Value that caused the error (optional)
+    """
+
+    def __init__(self, message: str, line_number: int = None, error_type: str = 'unknown',
+                 field: str = None, value: str = None):
+        self.message = message
+        self.line_number = line_number
+        self.error_type = error_type
+        self.field = field
+        self.value = value
+        super().__init__(self.message)
+
+    def __str__(self):
+        if self.line_number:
+            return f"Line {self.line_number}: {self.message}"
+        return self.message
+
+
 def generate_transaction_id(date: str, amount: float, hashed_address: str = "") -> str:
     """
     Generates a unique ID for a transaction using its date, amount, and address hash.

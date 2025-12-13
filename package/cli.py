@@ -569,3 +569,67 @@ def run_setup_wizard() -> None:
 
     # Completion
     print(help_module.get_completion_wizard_section())
+
+
+def print_validation_summary(validation_errors: List) -> None:
+    """
+    Print a summary of validation errors encountered during CSV processing.
+
+    Args:
+        validation_errors: List of ValidationError objects
+    """
+    from package.core import ValidationError
+
+    if not validation_errors:
+        return
+
+    print("\n" + "="*80)
+    print("VALIDATION ERRORS SUMMARY")
+    print("="*80)
+    print(f"Total errors: {len(validation_errors)}\n")
+
+    # Group errors by type
+    errors_by_type = {}
+    for error in validation_errors:
+        if isinstance(error, ValidationError):
+            error_type = error.error_type
+            if error_type not in errors_by_type:
+                errors_by_type[error_type] = []
+            errors_by_type[error_type].append(error)
+        else:
+            # Handle non-ValidationError exceptions
+            if 'unknown' not in errors_by_type:
+                errors_by_type['unknown'] = []
+            errors_by_type['unknown'].append(error)
+
+    # Display errors grouped by type
+    for error_type, errors in sorted(errors_by_type.items()):
+        print(f"{error_type.upper().replace('_', ' ')}:")
+        print("-" * 80)
+
+        for error in errors:
+            if isinstance(error, ValidationError):
+                if error.line_number:
+                    print(f"  Line {error.line_number}: {error.message}")
+                else:
+                    print(f"  {error.message}")
+            else:
+                print(f"  {str(error)}")
+
+        print()
+
+    # Suggestions for fixing
+    print("=" * 80)
+    print("HOW TO FIX:")
+    print("="*80)
+    print("1. Open your CSV file in a text editor or spreadsheet")
+    print("2. Navigate to the line numbers listed above")
+    print("3. Fix the issues according to the error messages")
+    print("4. Save the file and try processing again")
+    print()
+    print("Common fixes:")
+    print("  - Empty amounts: Fill in the amount value")
+    print("  - Invalid amounts: Ensure amounts are numeric (no $, commas, etc.)")
+    print("  - Missing fields: Add required date, address, or amount")
+    print("  - Invalid dates: Use format YYYY-MM-DD or MM/DD/YYYY")
+    print("="*80)
