@@ -1,32 +1,21 @@
 import os
 from cryptography.fernet import Fernet
 import hashlib
-import getpass  
+from . import cli
 
 # This script demonstrates how to securely hash and encrypt data, specifically bank addresses,
 # using a global salt and encryption key. These keys should ideally be stored and fetched from
 # a secure location or environment variables for enhanced security.
-# 
+#
 # Environment Variable Setup Example:
 # - Linux/Unix: Use the command `export GLOBAL_SALT=your_byte_string_here` and
 #   `export ENCRYPTION_KEY=your_encryption_key_here` to set these variables.
-# - Windows: Use `set GLOBAL_SALT=your_byte_string_here` and 
+# - Windows: Use `set GLOBAL_SALT=your_byte_string_here` and
 #   `set ENCRYPTION_KEY=your_encryption_key_here` in the command prompt.
 #
 # Note: `os.urandom(16)` generates a 16-byte random value which is suitable for cryptographic use
 # as a fallback for both the salt and the encryption key. However, it's recommended to have consistent
 # values especially for the salt to ensure hash consistency across application runs.
-
-def secure_input(prompt) -> None:
-    """
-    Securely inputs data from the user, hiding it from the terminal.
-    Note: getpass doesn't visually hide the input in some IDEs or Jupyter notebooks.
-    """
-    try:
-        return getpass.getpass(prompt)
-    except Exception as e:
-        print(f"Error obtaining secure input: {e}")
-        return None
 
 
 def initialize_crypto() -> list[Fernet, str]:
@@ -35,27 +24,21 @@ def initialize_crypto() -> list[Fernet, str]:
     Returns a Fernet cipher suite configured with the encryption key.
 
     Returns:
-        Fernet: A cipher suite object initialized with the encryption key.
+        Tuple[Fernet, bytes]: A cipher suite object and the salt
     """
     # Load or prompt for the global salt
     SALT = os.environ.get('FUCK_GLOBAL_SALT')
     if not SALT:
-        SALT = secure_input("Please paste the global salt here (Enter to skip): ")
-        if not SALT:
-            SALT = os.urandom(16)
-            print(f"\nSuggested command to set the environment variable:\nexport FUCK_GLOBAL_SALT={SALT.hex()}")
+        SALT = cli.prompt_for_salt()
+    else:
+        SALT = bytes.fromhex(SALT)
 
     # Load or prompt for the encryption key
     ENCRYPTION_KEY = os.environ.get('FUCK_ENCRYPTION_KEY')
     if not ENCRYPTION_KEY:
-        ENCRYPTION_KEY = secure_input("Please paste the encryption key here (Enter to skip): ")
-        if not ENCRYPTION_KEY:
-            ENCRYPTION_KEY = Fernet.generate_key()
-            print(f"\nSuggested command to set the environment variable:\nexport FUCK_ENCRYPTION_KEY={ENCRYPTION_KEY.decode()}")
-
-    # Ensure the types are correct for cryptographic operations
-    SALT = bytes.fromhex(SALT) if isinstance(SALT, str) else SALT
-    ENCRYPTION_KEY = ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY
+        ENCRYPTION_KEY = cli.prompt_for_encryption_key()
+    else:
+        ENCRYPTION_KEY = ENCRYPTION_KEY.encode()
 
     # Initialize and return the cipher suite
     return Fernet(ENCRYPTION_KEY), SALT

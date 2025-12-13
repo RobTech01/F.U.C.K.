@@ -79,8 +79,8 @@
           "id": "2.4",
           "description": "Extract UI code to cli.py",
           "file": "package/cli.py",
-          "implemented": false,
-          "tested": false
+          "implemented": true,
+          "tested": true
         },
         {
           "id": "2.5",
@@ -209,8 +209,8 @@
   },
   "progress": {
     "total_tasks": 25,
-    "implemented": 9,
-    "tested": 9,
-    "completion_percentage": 36
+    "implemented": 10,
+    "tested": 10,
+    "completion_percentage": 40
   }
 }

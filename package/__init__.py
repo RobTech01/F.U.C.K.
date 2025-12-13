@@ -9,8 +9,10 @@ __author__ = "RobTech01"
 # Core functionality exports
 from .crypto import initialize_crypto, hash_address, encrypt_address, decrypt_address
 from .storage import load_hash_table, save_hash_table, initialize_hash_table
-from .category_manager import categorize_transaction, get_user_category
-from .read_data import process_csv_file, select_csv_columns
+from .category_manager import categorize_transaction
+from .read_data import process_csv_file
+from .config import Config
+from . import cli
 
 __all__ = [
     # Crypto utilities
@@ -24,8 +26,10 @@ __all__ = [
     'initialize_hash_table',
     # Category management
     'categorize_transaction',
-    'get_user_category',
     # Data processing
     'process_csv_file',
-    'select_csv_columns',
+    # Configuration
+    'Config',
+    # CLI module (imported as whole module)
+    'cli',
 ]

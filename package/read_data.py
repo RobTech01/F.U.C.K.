@@ -3,22 +3,8 @@ import argparse
 from .category_manager import categorize_transaction
 from .crypto import initialize_crypto
 from .storage import load_hash_table, save_hash_table, print_hash_table
+from . import cli
 from typing import Tuple, List
-
-
-def select_csv_columns(header : List[str]) -> Tuple[int, int, int, int, int, int]:
-
-    print("Please select the column number for the following data:")
-    for index, col_name in enumerate(header):
-        print(f"{index + 1}. {col_name}")
-    date_col : int = int(input("\nDate column: ")) - 1
-    name_col : int = int(input("Name column (Enter to skip): ") or -1) - 1
-    address_col : int = int(input("Address column: ")) - 1
-    type_col : int = int(input("Transaction type/text column (Enter to skip): ") or -1) - 1
-    description_col : int = int(input("Description column (Enter to skip): ") or -1) - 1
-    amount_col : int = int(input("Amount column: ")) - 1
-
-    return date_col, address_col, amount_col, name_col, type_col, description_col
 
 
 def process_csv_file(filepath : str, hash_table : dict, cipher_suite, SALT) -> None:
@@ -26,7 +12,7 @@ def process_csv_file(filepath : str, hash_table : dict, cipher_suite, SALT) -> N
     with open(filepath, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
         header = next(reader)
-        date_col, address_col, amount_col, name_col, type_col, description_col = select_csv_columns(header)
+        date_col, address_col, amount_col, name_col, type_col, description_col = cli.select_csv_columns(header)
 
         for row in reader:
             date = row[date_col]
