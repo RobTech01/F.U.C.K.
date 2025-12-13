@@ -523,21 +523,112 @@ QUESTIONS FOR USER APPROVAL
 
 1. ✅ Feature scope: Subscriptions + merchant analysis + investment insights?
 2. ✅ Storage approach: Append transactions to existing hash table?
-3. ⚠️ CLI interface: New `patterns` command or extend `report`?
-4. ⚠️ Subscription criteria: 3+ occurrences, 25-35 day intervals, <10% amount variance?
-5. ⚠️ Implementation order: Storage → Detection → Analysis → CLI → Tests?
+3. ✅ CLI interface: Extend `report` command with `--patterns` flag
+4. ✅ SIMPLIFIED approach (KISS): Detect frequent merchants, estimate regularity
+5. ✅ Implementation order: Storage → Detection → Analysis → CLI → Tests
+
+USER FEEDBACK INCORPORATED:
+
+**Approach Simplified (KISS principle):**
+Instead of complex subscription detection with strict thresholds:
+- Group transactions by merchant (frequent merchant detection)
+- Calculate average interval between transactions for each merchant
+- Categorize regularity based on interval:
+  * Weekly: ~7 days (5-10 day range)
+  * Monthly: ~30 days (20-40 day range)
+  * Yearly: ~365 days (330-400 day range)
+  * Irregular: everything else
+- No complex variance checks or strict criteria
+- Simple, actionable insights
+
+**Updated Algorithm (Simpler):**
+```python
+def analyze_merchants(transactions):
+    # Group by address_hash
+    grouped = group_by(transactions, 'address_hash')
+
+    merchants = []
+    for address_hash, txns in grouped.items():
+        count = len(txns)
+        total = sum(t['amount'] for t in txns)
+
+        # Calculate average interval if 2+ transactions
+        regularity = 'single'
+        if count >= 2:
+            sorted_txns = sort_by_date(txns)
+            intervals = [date_diff(sorted_txns[i], sorted_txns[i-1])
+                        for i in range(1, len(sorted_txns))]
+            avg_interval = mean(intervals)
+
+            # Simple categorization
+            if 5 <= avg_interval <= 10:
+                regularity = 'weekly'
+            elif 20 <= avg_interval <= 40:
+                regularity = 'monthly'
+            elif 330 <= avg_interval <= 400:
+                regularity = 'yearly'
+            else:
+                regularity = 'irregular'
+
+        merchants.append({
+            'address': decrypt(address_hash),
+            'count': count,
+            'total': total,
+            'avg_amount': total / count,
+            'regularity': regularity
+        })
+
+    return sorted(merchants, key=lambda m: m['total'], reverse=True)
+```
+
+---
+
+REVISED IMPLEMENTATION PLAN (SIMPLIFIED)
+
+Session 1: Storage Extension [FOUNDATION]
+- [ ] Add transactions list to hash table
+- [ ] Update load/save functions
+- [ ] Backward compatibility handling
+- [ ] Update process_csv_file() to save individual transactions
+- [ ] Unit tests (10 tests)
+- Commit: "feat: Add transaction history storage"
+
+Session 2: Merchant Pattern Analysis [CORE FEATURE]
+- [ ] Create package/patterns.py module
+- [ ] Implement analyze_merchants() function
+- [ ] Add regularity detection (weekly/monthly/yearly/irregular)
+- [ ] Add investment vs. consumption calculation
+- [ ] Unit tests (15 tests with mock data)
+- Commit: "feat: Add merchant pattern and regularity detection"
+
+Session 3: CLI Integration [USER INTERFACE]
+- [ ] Extend cmd_report() with --patterns flag
+- [ ] Add display_merchant_patterns() to cli.py
+- [ ] Show top merchants by spending
+- [ ] Show regularity insights
+- [ ] Show investment rate
+- [ ] Unit tests (8 tests)
+- Commit: "feat: Add --patterns flag to report command"
+
+Session 4: Testing & Documentation [POLISH]
+- [ ] Integration tests with dummy CSV data
+- [ ] Manual test procedure
+- [ ] Update README.md
+- [ ] Add help topic for patterns
+- [ ] Performance test (1000+ transactions)
+- Commit: "docs: Add patterns documentation and tests"
 
 ---
 
 NEXT ACTIONS
 
-1. Present plan to user for review
-2. Get approval on technical approach
-3. Clarify any open questions
-4. Begin Session 1 implementation
-5. Commit progress incrementally
+1. ✅ Present plan to user for review
+2. ✅ Get approval on technical approach (APPROVED - SIMPLIFIED)
+3. ✅ Clarify open questions (RESOLVED)
+4. [ ] Begin Session 1 implementation
+5. [ ] Commit progress incrementally
 
 ---
 
-Status: AWAITING USER APPROVAL
+Status: APPROVED - READY TO IMPLEMENT (Simplified KISS approach)
 Last updated: 2025-12-13
