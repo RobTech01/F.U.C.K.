@@ -5,6 +5,7 @@ from .crypto import initialize_crypto
 from .storage import load_hash_table, save_hash_table, print_hash_table
 from . import cli
 from .core import validate_csv_file, validate_transaction, parse_csv_row, sanitize_transaction
+from .config import Config, get_bank_identifier
 from typing import Tuple, List, Dict
 
 
@@ -45,19 +46,55 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT) -> Dic
             if not header or len(header) < 3:
                 raise ValueError(f"CSV header invalid: needs at least 3 columns, got {len(header)}")
 
-            # Get column mapping from user
-            date_col, address_col, amount_col, name_col, type_col, description_col = cli.select_csv_columns(header)
+            # Load config and check for saved column mapping
+            config = Config.load()
+            bank_id = get_bank_identifier(header)
+
+            saved_mapping = config.get_column_mapping(bank_id)
+            if saved_mapping:
+                print(f"✓ Using saved column mapping for this CSV format")
+                date_col = saved_mapping.get('date', 0)
+                address_col = saved_mapping.get('address', 0)
+                amount_col = saved_mapping.get('amount', 0)
+                name_col = saved_mapping.get('name', -1)
+                type_col = saved_mapping.get('type', -1)
+                description_col = saved_mapping.get('description', -1)
+            else:
+                # Get column mapping from user
+                date_col, address_col, amount_col, name_col, type_col, description_col = cli.select_csv_columns(header)
+
+                # Save mapping for future use
+                mapping = {
+                    'date': date_col,
+                    'address': address_col,
+                    'amount': amount_col,
+                    'name': name_col,
+                    'type': type_col,
+                    'description': description_col
+                }
+                config.save_column_mapping(bank_id, mapping)
+                print("✓ Column mapping saved for future use")
 
             # Validate column selections
             max_col = len(header) - 1
             if not (0 <= date_col <= max_col and 0 <= address_col <= max_col and 0 <= amount_col <= max_col):
                 raise ValueError("Invalid column selection: columns out of range")
 
+            # Count total rows first for progress indication
+            rows = list(reader)
+            total_rows = len(rows)
+
+            print(f"\nProcessing {total_rows} transactions...")
+
             # Process each row
             row_num = 1  # Header is row 0
-            for row in reader:
+            for idx, row in enumerate(rows, 1):
                 row_num += 1
                 stats['total'] += 1
+
+                # Show progress every 10 rows or on last row
+                if idx % 10 == 0 or idx == total_rows:
+                    cli.print_progress(idx, total_rows, "Processing")
 
                 # Validate row length
                 if len(row) < len(header):
