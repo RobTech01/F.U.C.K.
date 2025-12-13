@@ -185,3 +185,47 @@ def search_addresses(
     ]
 
     return matches
+
+
+def bulk_recategorize(
+    pattern: str,
+    new_category: str,
+    hash_table: dict,
+    cipher_suite,
+    dry_run: bool = False
+) -> Tuple[int, List[str]]:
+    """
+    Bulk recategorize addresses matching a pattern.
+
+    Args:
+        pattern: Search pattern (substring match, case-insensitive)
+        new_category: New category to assign to matching addresses
+        hash_table: Hash table to update
+        cipher_suite: Cipher suite for decryption
+        dry_run: If True, don't actually make changes (preview only)
+
+    Returns:
+        Tuple of (count_affected, list_of_affected_addresses)
+    """
+    # Find all matching addresses
+    matches = search_addresses(hash_table, cipher_suite, pattern)
+
+    if not matches:
+        return 0, []
+
+    affected_addresses = []
+    count = 0
+
+    for address, old_category, encrypted_hash in matches:
+        # Skip if already in target category
+        if old_category == new_category:
+            continue
+
+        if not dry_run:
+            # Actually update the category
+            hash_table['addresses'][encrypted_hash] = new_category
+
+        affected_addresses.append(f"{address} ({old_category} → {new_category})")
+        count += 1
+
+    return count, affected_addresses

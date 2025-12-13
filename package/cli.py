@@ -494,3 +494,26 @@ def display_filtered_categories(
     print(f"{'TOTAL':<50} ${grand_total:>12.2f}")
     print("="*80)
     print(f"\nShowing {len(categories)} categor{'y' if len(categories) == 1 else 'ies'}")
+
+
+def preview_bulk_changes(affected_list: List[str], new_category: str) -> None:
+    """
+    Display preview of bulk recategorization changes.
+
+    Args:
+        affected_list: List of "address (old → new)" strings
+        new_category: The new category being applied
+    """
+    print("\n" + "="*80)
+    print("BULK RECATEGORIZATION PREVIEW")
+    print("="*80)
+    print(f"Addresses to be recategorized: {len(affected_list)}")
+    print(f"New category: {new_category}")
+    print("-" * 80)
+    print()
+
+    for idx, change_desc in enumerate(affected_list, 1):
+        print(f"{idx}. {change_desc}")
+
+    print()
+    print("="*80)

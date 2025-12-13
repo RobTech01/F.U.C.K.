@@ -15,7 +15,7 @@ from package import (
     cli
 )
 from package.storage import print_hash_table, get_categories_and_totals, filter_categories
-from package.category_manager import search_addresses, recategorize_address, get_all_addresses_with_categories
+from package.category_manager import search_addresses, recategorize_address, get_all_addresses_with_categories, bulk_recategorize
 from package import reports
 
 
@@ -314,6 +314,100 @@ def cmd_edit(args):
         return 1
 
 
+def cmd_bulk_edit(args):
+    """Bulk recategorize addresses matching a pattern."""
+    print("Bulk Edit Mode: Recategorize multiple addresses")
+
+    # Validate arguments
+    if not args.pattern:
+        print("✗ Error: --pattern is required")
+        return 1
+
+    if not args.category:
+        print("✗ Error: --category is required")
+        return 1
+
+    # Initialize crypto
+    try:
+        cipher_suite, SALT = initialize_crypto()
+    except KeyboardInterrupt:
+        print("\nCrypto initialization cancelled by user")
+        return 130
+    except Exception as e:
+        print(f"Error initializing crypto: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+    # Load hash table
+    try:
+        hash_table = load_hash_table(cipher_suite)
+    except FileNotFoundError:
+        print("✗ Error: No hash table found. Process a CSV file first.")
+        return 1
+    except Exception as e:
+        print(f"✗ Error loading hash table: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+    try:
+        # Preview mode (dry run)
+        print(f"\nSearching for addresses matching '{args.pattern}'...")
+        count, affected = bulk_recategorize(
+            args.pattern,
+            args.category,
+            hash_table,
+            cipher_suite,
+            dry_run=True
+        )
+
+        if count == 0:
+            print(f"\n✗ No addresses found matching pattern '{args.pattern}'")
+            print("(or all matching addresses already have the target category)")
+            return 1
+
+        # Show preview
+        cli.preview_bulk_changes(affected, args.category)
+
+        # Confirm unless --yes flag
+        if not args.yes:
+            if not cli.confirm_action("\nApply these changes?"):
+                print("\nBulk edit cancelled")
+                return 0
+
+        # Actually apply changes
+        print("\nApplying changes...")
+        count, affected = bulk_recategorize(
+            args.pattern,
+            args.category,
+            hash_table,
+            cipher_suite,
+            dry_run=False
+        )
+
+        # Save changes
+        save_hash_table(hash_table, cipher_suite)
+
+        print(f"\n✓ Successfully recategorized {count} address{'es' if count != 1 else ''}")
+        print("✓ Changes saved successfully")
+        print("\nNote: Category totals will be updated when you next process these addresses")
+
+        return 0
+
+    except KeyboardInterrupt:
+        print("\n\nBulk edit cancelled by user")
+        return 130
+    except Exception as e:
+        print(f"✗ Error during bulk edit: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+
 def cmd_report(args):
     """Generate spending insights and reports."""
     print("Generating spending report...")
@@ -502,6 +596,30 @@ Examples:
         help='Show additional statistics'
     )
     report_parser.set_defaults(func=cmd_report)
+
+    # Bulk Edit command
+    bulk_edit_parser = subparsers.add_parser(
+        'bulk-edit',
+        help='Bulk recategorize addresses matching a pattern'
+    )
+    bulk_edit_parser.add_argument(
+        '--pattern',
+        type=str,
+        required=True,
+        help='Search pattern to match addresses (case-insensitive substring)'
+    )
+    bulk_edit_parser.add_argument(
+        '--category',
+        type=str,
+        required=True,
+        help='New category to assign to matching addresses'
+    )
+    bulk_edit_parser.add_argument(
+        '--yes',
+        action='store_true',
+        help='Skip confirmation prompt (auto-confirm)'
+    )
+    bulk_edit_parser.set_defaults(func=cmd_bulk_edit)
 
     # Version command
     version_parser = subparsers.add_parser(
