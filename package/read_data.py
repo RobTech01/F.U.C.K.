@@ -1,5 +1,6 @@
 import csv
 import argparse
+import copy
 from .category_manager import categorize_transaction
 from .crypto import initialize_crypto
 from .storage import load_hash_table, save_hash_table, print_hash_table
@@ -9,7 +10,7 @@ from .config import Config, get_bank_identifier
 from typing import Tuple, List, Dict
 
 
-def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT) -> Dict[str, int]:
+def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT, review: bool = True) -> Dict[str, int]:
     """
     Process a CSV file and categorize all transactions.
 
@@ -18,6 +19,7 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT) -> Dic
         hash_table: Hash table to update
         cipher_suite: Encryption cipher
         SALT: Salt for hashing
+        review: Whether to show review screen before saving (default: True)
 
     Returns:
         Dict with statistics: {'total': int, 'processed': int, 'skipped': int, 'errors': int}
@@ -32,6 +34,13 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT) -> Dic
         raise ValueError(f"Invalid CSV file: {error_msg}")
 
     stats = {'total': 0, 'processed': 0, 'skipped': 0, 'errors': 0}
+
+    # Create temporary hash table for review mode
+    if review:
+        temp_hash_table = copy.deepcopy(hash_table)
+        reviewed_transactions = []  # Track transactions for display
+    else:
+        temp_hash_table = hash_table
 
     try:
         with open(filepath, newline='', encoding='utf-8') as csvfile:
@@ -141,9 +150,23 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT) -> Dic
                         stats['skipped'] += 1
                         continue
 
-                    # Categorize transaction
-                    categorize_transaction(transaction, hash_table, cipher_suite, SALT)
+                    # Categorize transaction (into temp table if review mode)
+                    categorize_transaction(transaction, temp_hash_table, cipher_suite, SALT)
                     stats['processed'] += 1
+
+                    # Track for review display
+                    if review:
+                        # Find the category that was just assigned
+                        from .category_manager import find_category_by_address
+                        from .crypto import hash_address
+                        hashed_address = hash_address(transaction['address'], SALT)
+                        category = find_category_by_address(temp_hash_table['addresses'], hashed_address, cipher_suite)
+                        reviewed_transactions.append({
+                            'date': transaction['date'],
+                            'amount': transaction['amount'],
+                            'category': category,
+                            'address': transaction['address']
+                        })
 
                 except IndexError as e:
                     print(f"Warning: Row {row_num} has column access error: {e}, skipping")
@@ -157,6 +180,31 @@ def process_csv_file(filepath: str, hash_table: dict, cipher_suite, SALT) -> Dic
 
             # Print summary
             cli.print_summary(stats['total'], stats['processed'], stats['skipped'])
+
+            # Review mode: Show review screen and get confirmation
+            if review and stats['processed'] > 0:
+                print("\n" + "="*80)
+                print("Review mode: Please review transactions before saving")
+                print("="*80)
+
+                # Display review with category totals from temp hash table
+                cli.display_review(reviewed_transactions, temp_hash_table['categories'])
+
+                # Get user confirmation
+                user_choice = cli.confirm_processing()
+
+                if user_choice == 'confirm':
+                    print("\n✓ Applying changes to database...")
+                    # Merge temp data into real hash_table
+                    hash_table['addresses'] = temp_hash_table['addresses']
+                    hash_table['categories'] = temp_hash_table['categories']
+                    hash_table['transaction_ids'] = temp_hash_table['transaction_ids']
+                    print("✓ Changes applied successfully")
+                elif user_choice == 'cancel':
+                    print("\n✗ Processing cancelled by user")
+                    print("No changes were saved to the database")
+                    raise ValueError("User cancelled transaction review")
+                # 'edit' will be handled in Session 2
 
             return stats
 

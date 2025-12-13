@@ -402,5 +402,208 @@ class TestCSVFileValidation(unittest.TestCase):
             self.assertEqual(stats['processed'], 2)
 
 
+class TestReviewMode(unittest.TestCase):
+    """Test review mode functionality"""
+
+    def setUp(self):
+        """Set up test environment"""
+        self.test_key = Fernet.generate_key()
+        self.cipher_suite = Fernet(self.test_key)
+        self.test_salt = b'test_salt_1234567890123456789012'
+        self.hash_table = initialize_hash_table()
+
+        self.temp_csv = tempfile.NamedTemporaryFile(
+            mode='w', delete=False, suffix='.csv', encoding='utf-8'
+        )
+        self.temp_csv.close()
+
+    def tearDown(self):
+        """Clean up"""
+        if os.path.exists(self.temp_csv.name):
+            os.unlink(self.temp_csv.name)
+
+    def _write_csv(self, content):
+        """Helper to write CSV content"""
+        with open(self.temp_csv.name, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+    @patch('package.read_data.Config')
+    @patch('package.read_data.categorize_transaction')
+    @patch('package.read_data.cli.select_csv_columns')
+    @patch('package.read_data.cli.print_progress')
+    @patch('package.read_data.cli.print_summary')
+    @patch('package.read_data.cli.display_review')
+    @patch('package.read_data.cli.confirm_processing')
+    def test_review_mode_shows_review_screen(
+        self, mock_confirm, mock_display, mock_summary, mock_progress,
+        mock_select, mock_categorize, mock_config_class
+    ):
+        """Test that review mode shows review screen before saving"""
+        csv_content = """Date;Address;Amount
+2024-01-01;Walmart;100.50
+2024-01-02;Target;75.00"""
+        self._write_csv(csv_content)
+
+        mock_config = MagicMock()
+        mock_config.get_column_mapping.return_value = {
+            'date': 0, 'address': 1, 'amount': 2,
+            'name': -1, 'type': -1, 'description': -1
+        }
+        mock_config_class.load.return_value = mock_config
+        mock_confirm.return_value = 'confirm'
+
+        # Execute with review=True
+        stats = process_csv_file(
+            self.temp_csv.name, self.hash_table, self.cipher_suite,
+            self.test_salt, review=True
+        )
+
+        # Verify review was shown
+        mock_display.assert_called_once()
+        mock_confirm.assert_called_once()
+        self.assertEqual(stats['processed'], 2)
+
+    @patch('package.read_data.Config')
+    @patch('package.read_data.categorize_transaction')
+    @patch('package.read_data.cli.select_csv_columns')
+    @patch('package.read_data.cli.print_progress')
+    @patch('package.read_data.cli.print_summary')
+    @patch('package.read_data.cli.display_review')
+    @patch('package.read_data.cli.confirm_processing')
+    def test_review_mode_disabled_skips_review(
+        self, mock_confirm, mock_display, mock_summary, mock_progress,
+        mock_select, mock_categorize, mock_config_class
+    ):
+        """Test that review=False skips review screen"""
+        csv_content = """Date;Address;Amount
+2024-01-01;Store;50.00"""
+        self._write_csv(csv_content)
+
+        mock_config = MagicMock()
+        mock_config.get_column_mapping.return_value = {
+            'date': 0, 'address': 1, 'amount': 2,
+            'name': -1, 'type': -1, 'description': -1
+        }
+        mock_config_class.load.return_value = mock_config
+
+        # Execute with review=False
+        stats = process_csv_file(
+            self.temp_csv.name, self.hash_table, self.cipher_suite,
+            self.test_salt, review=False
+        )
+
+        # Verify review was NOT shown
+        mock_display.assert_not_called()
+        mock_confirm.assert_not_called()
+        self.assertEqual(stats['processed'], 1)
+
+    @patch('package.read_data.Config')
+    @patch('package.read_data.categorize_transaction')
+    @patch('package.read_data.cli.select_csv_columns')
+    @patch('package.read_data.cli.print_progress')
+    @patch('package.read_data.cli.print_summary')
+    @patch('package.read_data.cli.display_review')
+    @patch('package.read_data.cli.confirm_processing')
+    def test_review_mode_user_confirms_saves_data(
+        self, mock_confirm, mock_display, mock_summary, mock_progress,
+        mock_select, mock_categorize, mock_config_class
+    ):
+        """Test that user confirming review saves data to hash table"""
+        csv_content = """Date;Address;Amount
+2024-01-01;Walmart;100.00"""
+        self._write_csv(csv_content)
+
+        mock_config = MagicMock()
+        mock_config.get_column_mapping.return_value = {
+            'date': 0, 'address': 1, 'amount': 2,
+            'name': -1, 'type': -1, 'description': -1
+        }
+        mock_config_class.load.return_value = mock_config
+        mock_confirm.return_value = 'confirm'
+
+        # Track initial state
+        initial_transaction_ids = len(self.hash_table['transaction_ids'])
+
+        # Execute
+        stats = process_csv_file(
+            self.temp_csv.name, self.hash_table, self.cipher_suite,
+            self.test_salt, review=True
+        )
+
+        # Verify data was saved
+        self.assertEqual(stats['processed'], 1)
+        # Categorize was called, which would add to transaction_ids
+        self.assertEqual(mock_categorize.call_count, 1)
+
+    @patch('package.read_data.Config')
+    @patch('package.read_data.categorize_transaction')
+    @patch('package.read_data.cli.select_csv_columns')
+    @patch('package.read_data.cli.print_progress')
+    @patch('package.read_data.cli.print_summary')
+    @patch('package.read_data.cli.display_review')
+    @patch('package.read_data.cli.confirm_processing')
+    def test_review_mode_user_cancels_raises_exception(
+        self, mock_confirm, mock_display, mock_summary, mock_progress,
+        mock_select, mock_categorize, mock_config_class
+    ):
+        """Test that user cancelling review raises ValueError"""
+        csv_content = """Date;Address;Amount
+2024-01-01;Store;50.00"""
+        self._write_csv(csv_content)
+
+        mock_config = MagicMock()
+        mock_config.get_column_mapping.return_value = {
+            'date': 0, 'address': 1, 'amount': 2,
+            'name': -1, 'type': -1, 'description': -1
+        }
+        mock_config_class.load.return_value = mock_config
+        mock_confirm.return_value = 'cancel'
+
+        # Execute and expect exception
+        with self.assertRaises(ValueError) as context:
+            process_csv_file(
+                self.temp_csv.name, self.hash_table, self.cipher_suite,
+                self.test_salt, review=True
+            )
+
+        # Verify exception message
+        self.assertIn("cancelled", str(context.exception).lower())
+
+    @patch('package.read_data.Config')
+    @patch('package.read_data.categorize_transaction')
+    @patch('package.read_data.cli.select_csv_columns')
+    @patch('package.read_data.cli.print_progress')
+    @patch('package.read_data.cli.print_summary')
+    @patch('package.read_data.cli.display_review')
+    @patch('package.read_data.cli.confirm_processing')
+    def test_review_mode_with_no_transactions_skips_review(
+        self, mock_confirm, mock_display, mock_summary, mock_progress,
+        mock_select, mock_categorize, mock_config_class
+    ):
+        """Test that review is skipped when no transactions were processed"""
+        csv_content = """Date;Address;Amount
+2024-01-01;Store;invalid_amount"""
+        self._write_csv(csv_content)
+
+        mock_config = MagicMock()
+        mock_config.get_column_mapping.return_value = {
+            'date': 0, 'address': 1, 'amount': 2,
+            'name': -1, 'type': -1, 'description': -1
+        }
+        mock_config_class.load.return_value = mock_config
+
+        # Execute with review=True but no valid transactions
+        stats = process_csv_file(
+            self.temp_csv.name, self.hash_table, self.cipher_suite,
+            self.test_salt, review=True
+        )
+
+        # Verify review was NOT shown (no transactions to review)
+        mock_display.assert_not_called()
+        mock_confirm.assert_not_called()
+        self.assertEqual(stats['processed'], 0)
+        self.assertEqual(stats['skipped'], 1)
+
+
 if __name__ == '__main__':
     unittest.main()

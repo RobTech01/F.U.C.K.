@@ -285,3 +285,287 @@ def print_summary(transactions_processed: int, new_transactions: int, duplicates
     print(f"New transactions added:    {new_transactions}")
     print(f"Duplicates skipped:        {duplicates_skipped}")
     print("="*50)
+
+
+def display_review(transactions: List[Dict], category_totals: Dict[str, float]) -> None:
+    """
+    Displays a review of categorized transactions before saving.
+
+    Args:
+        transactions: List of transaction dictionaries with 'date', 'amount', 'category'
+        category_totals: Dictionary mapping categories to total amounts
+    """
+    print("\n" + "="*80)
+    print("TRANSACTION REVIEW")
+    print("="*80)
+    print(f"Total transactions: {len(transactions)}")
+    print()
+
+    # Display transactions in a table format
+    print(f"{'#':<4} {'Date':<12} {'Amount':<12} {'Category':<30}")
+    print("-" * 80)
+
+    for idx, trans in enumerate(transactions, 1):
+        date = trans.get('date', 'N/A')[:12]
+        amount = f"${trans.get('amount', 0.0):.2f}".ljust(12)
+        category = trans.get('category', 'Uncategorized')[:30]
+        print(f"{idx:<4} {date:<12} {amount:<12} {category:<30}")
+
+    # Display category totals
+    print("\n" + "="*80)
+    print("CATEGORY TOTALS")
+    print("="*80)
+
+    for category in sorted(category_totals.keys()):
+        total = category_totals[category]
+        print(f"{category:<50} ${total:>12.2f}")
+
+    print("="*80)
+
+
+def confirm_processing() -> str:
+    """
+    Asks user to confirm, cancel, or edit the transaction review.
+
+    Returns:
+        str: 'confirm' to proceed, 'cancel' to abort, or 'edit' to make changes
+    """
+    print("\nOptions:")
+    print("  [c] Confirm and save")
+    print("  [x] Cancel (discard all)")
+    print("  [e] Edit a transaction (not yet implemented)")
+    print()
+
+    while True:
+        response = input("Your choice (c/x/e): ").strip().lower()
+
+        if response == 'c':
+            return 'confirm'
+        elif response == 'x':
+            return 'cancel'
+        elif response == 'e':
+            print("Edit functionality coming in Session 2!")
+            print("For now, please confirm or cancel.")
+            continue
+        else:
+            print("Invalid choice. Please enter 'c', 'x', or 'e'.")
+
+
+def display_address_search_results(results: List[Tuple[str, str, str]]) -> None:
+    """
+    Display search results for addresses.
+
+    Args:
+        results: List of (address, category, encrypted_hash) tuples
+    """
+    if not results:
+        print("\nNo addresses found matching your search.")
+        return
+
+    print("\n" + "="*80)
+    print("SEARCH RESULTS")
+    print("="*80)
+    print(f"Found {len(results)} matching address(es):\n")
+    print(f"{'#':<4} {'Address':<40} {'Category':<30}")
+    print("-" * 80)
+
+    for idx, (address, category, _) in enumerate(results, 1):
+        addr_display = address[:40]
+        cat_display = category[:30]
+        print(f"{idx:<4} {addr_display:<40} {cat_display:<30}")
+
+    print("="*80)
+
+
+def select_address_from_results(results: List[Tuple[str, str, str]]) -> Optional[Tuple[str, str, str]]:
+    """
+    Prompt user to select an address from search results.
+
+    Args:
+        results: List of (address, category, encrypted_hash) tuples
+
+    Returns:
+        Selected tuple or None if cancelled
+    """
+    if not results:
+        return None
+
+    while True:
+        try:
+            user_input = input("\nSelect address number (or 'c' to cancel): ").strip()
+
+            if user_input.lower() == 'c':
+                return None
+
+            selection = int(user_input)
+            if 1 <= selection <= len(results):
+                return results[selection - 1]
+            else:
+                print(f"Please enter a number between 1 and {len(results)}")
+        except ValueError:
+            print("Invalid input. Please enter a number or 'c' to cancel.")
+        except KeyboardInterrupt:
+            print("\nCancelled by user")
+            return None
+
+
+def prompt_for_new_category(current_category: str, available_categories: List[str]) -> Optional[str]:
+    """
+    Prompt user for a new category when editing.
+
+    Args:
+        current_category: The current category
+        available_categories: List of available categories
+
+    Returns:
+        New category or None if cancelled
+    """
+    print(f"\nCurrent category: {current_category}")
+    print("\nAvailable categories:")
+
+    for i, category in enumerate(available_categories, 1):
+        marker = " (current)" if category == current_category else ""
+        print(f"{i}. {category}{marker}")
+    print("Or enter a new category name")
+    print("'c' to cancel")
+
+    while True:
+        user_input = input("\n> ").strip()
+
+        if user_input.lower() == 'c':
+            return None
+
+        if user_input.isdigit():
+            selection = int(user_input)
+            if 1 <= selection <= len(available_categories):
+                return available_categories[selection - 1]
+            else:
+                print(f"Please enter a number between 1 and {len(available_categories)}")
+        elif user_input:
+            # Custom category
+            return user_input
+        else:
+            print("Invalid input. Please enter a category number, name, or 'c' to cancel.")
+
+
+def display_filtered_categories(
+    categories: Dict[str, float],
+    filters_applied: Dict[str, any] = None
+) -> None:
+    """
+    Display filtered category totals.
+
+    Args:
+        categories: Dictionary of categories and their totals
+        filters_applied: Dictionary of filters that were applied (for display)
+    """
+    print("\n" + "="*80)
+
+    # Show filters if any were applied
+    if filters_applied and any(filters_applied.values()):
+        print("FILTERED CATEGORY TOTALS")
+        print("="*80)
+        print("Filters applied:")
+        if filters_applied.get('category'):
+            print(f"  - Category contains: '{filters_applied['category']}'")
+        if filters_applied.get('min_amount') is not None:
+            print(f"  - Minimum amount: ${filters_applied['min_amount']:.2f}")
+        if filters_applied.get('max_amount') is not None:
+            print(f"  - Maximum amount: ${filters_applied['max_amount']:.2f}")
+        print("-" * 80)
+    else:
+        print("CATEGORY TOTALS")
+        print("="*80)
+
+    if not categories:
+        print("No categories match the specified filters.")
+        print("="*80)
+        return
+
+    # Calculate grand total
+    grand_total = sum(categories.values())
+
+    # Display categories sorted alphabetically
+    for category in sorted(categories.keys()):
+        total = categories[category]
+        print(f"{category:<50} ${total:>12.2f}")
+
+    print("-" * 80)
+    print(f"{'TOTAL':<50} ${grand_total:>12.2f}")
+    print("="*80)
+    print(f"\nShowing {len(categories)} categor{'y' if len(categories) == 1 else 'ies'}")
+
+
+def preview_bulk_changes(affected_list: List[str], new_category: str) -> None:
+    """
+    Display preview of bulk recategorization changes.
+
+    Args:
+        affected_list: List of "address (old → new)" strings
+        new_category: The new category being applied
+    """
+    print("\n" + "="*80)
+    print("BULK RECATEGORIZATION PREVIEW")
+    print("="*80)
+    print(f"Addresses to be recategorized: {len(affected_list)}")
+    print(f"New category: {new_category}")
+    print("-" * 80)
+    print()
+
+    for idx, change_desc in enumerate(affected_list, 1):
+        print(f"{idx}. {change_desc}")
+
+    print()
+    print("="*80)
+
+
+def run_setup_wizard() -> None:
+    """
+    Run the interactive setup wizard for new users.
+    Guides through security setup, CSV preparation, and category structure.
+    """
+    from package import help as help_module
+
+    # Welcome
+    print(help_module.get_welcome_message())
+    try:
+        input()
+    except KeyboardInterrupt:
+        print("\n\nSetup cancelled by user.")
+        return
+
+    # Step 1: Security
+    print(help_module.get_security_wizard_section(), end='')
+    try:
+        has_keys = input().strip().lower()
+        if has_keys == 'y':
+            print("\nGreat! Make sure your environment variables are set:")
+            print("  - FUCK_GLOBAL_SALT")
+            print("  - FUCK_ENCRYPTION_KEY")
+            print("\nYou can verify with: echo $FUCK_GLOBAL_SALT")
+        else:
+            print("\nNo problem! When you run 'process' for the first time,")
+            print("F.U.C.K. will generate these automatically.")
+            print("\nMake sure to save the output - you'll need it!")
+    except KeyboardInterrupt:
+        print("\n\nSetup cancelled by user.")
+        return
+
+    # Step 2: CSV Preparation
+    print(help_module.get_csv_wizard_section(), end='')
+    try:
+        input()
+    except KeyboardInterrupt:
+        print("\n\nSetup cancelled by user.")
+        return
+
+    # Step 3: Category Structure
+    print(help_module.get_category_wizard_section(), end='')
+    try:
+        input()
+    except KeyboardInterrupt:
+        print("\n\nSetup cancelled by user.")
+        return
+
+    # Completion
+    print(help_module.get_completion_wizard_section())
