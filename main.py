@@ -50,7 +50,8 @@ def cmd_process(args):
 
     # Process CSV file with comprehensive error handling
     try:
-        stats = process_csv_file(args.csv_file, hash_table, cipher_suite, SALT)
+        enable_review = not args.no_review
+        stats = process_csv_file(args.csv_file, hash_table, cipher_suite, SALT, review=enable_review)
         print(f"\n✓ CSV file processed successfully.")
         print(f"  Processed: {stats['processed']}/{stats['total']} transactions")
         if stats['skipped'] > 0:
@@ -223,6 +224,11 @@ Examples:
         'csv_file',
         type=str,
         help='Path to CSV file to process'
+    )
+    process_parser.add_argument(
+        '--no-review',
+        action='store_true',
+        help='Skip transaction review (save immediately)'
     )
     process_parser.set_defaults(func=cmd_process)
 

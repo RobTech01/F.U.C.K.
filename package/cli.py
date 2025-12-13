@@ -285,3 +285,67 @@ def print_summary(transactions_processed: int, new_transactions: int, duplicates
     print(f"New transactions added:    {new_transactions}")
     print(f"Duplicates skipped:        {duplicates_skipped}")
     print("="*50)
+
+
+def display_review(transactions: List[Dict], category_totals: Dict[str, float]) -> None:
+    """
+    Displays a review of categorized transactions before saving.
+
+    Args:
+        transactions: List of transaction dictionaries with 'date', 'amount', 'category'
+        category_totals: Dictionary mapping categories to total amounts
+    """
+    print("\n" + "="*80)
+    print("TRANSACTION REVIEW")
+    print("="*80)
+    print(f"Total transactions: {len(transactions)}")
+    print()
+
+    # Display transactions in a table format
+    print(f"{'#':<4} {'Date':<12} {'Amount':<12} {'Category':<30}")
+    print("-" * 80)
+
+    for idx, trans in enumerate(transactions, 1):
+        date = trans.get('date', 'N/A')[:12]
+        amount = f"${trans.get('amount', 0.0):.2f}".ljust(12)
+        category = trans.get('category', 'Uncategorized')[:30]
+        print(f"{idx:<4} {date:<12} {amount:<12} {category:<30}")
+
+    # Display category totals
+    print("\n" + "="*80)
+    print("CATEGORY TOTALS")
+    print("="*80)
+
+    for category in sorted(category_totals.keys()):
+        total = category_totals[category]
+        print(f"{category:<50} ${total:>12.2f}")
+
+    print("="*80)
+
+
+def confirm_processing() -> str:
+    """
+    Asks user to confirm, cancel, or edit the transaction review.
+
+    Returns:
+        str: 'confirm' to proceed, 'cancel' to abort, or 'edit' to make changes
+    """
+    print("\nOptions:")
+    print("  [c] Confirm and save")
+    print("  [x] Cancel (discard all)")
+    print("  [e] Edit a transaction (not yet implemented)")
+    print()
+
+    while True:
+        response = input("Your choice (c/x/e): ").strip().lower()
+
+        if response == 'c':
+            return 'confirm'
+        elif response == 'x':
+            return 'cancel'
+        elif response == 'e':
+            print("Edit functionality coming in Session 2!")
+            print("For now, please confirm or cancel.")
+            continue
+        else:
+            print("Invalid choice. Please enter 'c', 'x', or 'e'.")
