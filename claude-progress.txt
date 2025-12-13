@@ -240,3 +240,304 @@ for personal finance management with strong security and UX features.
 
 Last updated: 2025-12-13
 Updated by: Session 5 completed - Better error reporting (FINAL SESSION - 100% COMPLETE!)
+
+================================================================================
+NEW FEATURE PLANNING: SUBSCRIPTION & SPENDING PATTERN DETECTION
+================================================================================
+
+Branch: claude/plan-spending-detection-01YFyVYkDYwn7WmSHJmNW3jL
+Started: 2025-12-13
+Methodology: Following Anthropic's effective harness approach + KISS principle
+
+---
+
+PLANNING PHASE - IN PROGRESS
+[✓] Analyzed current codebase structure
+[✓] Reviewed Anthropic methodology for long-running agents
+[✓] Identified feature requirements
+[ ] Define implementation approach
+[ ] Create detailed technical plan
+[ ] Get user approval
+
+---
+
+FEATURE OVERVIEW
+
+Goal: Help users understand spending and investment habits by detecting:
+1. Recurring subscriptions (Netflix, gym, rent, etc.)
+2. Frequent merchants and spending patterns
+3. Investment vs. consumption behavior trends
+
+Current State:
+- F.U.C.K. already has strong categorization (13 categories)
+- Has basic reporting (totals, percentages, bar charts)
+- Stores encrypted addresses and category mappings
+- ❌ NO time-series analysis or pattern detection
+- ❌ NO individual transaction history (only aggregates)
+- ❌ NO recurring transaction detection
+
+Key Limitation: Current storage only keeps category totals, not individual transactions with dates. This prevents time-series analysis.
+
+---
+
+ANTHROPIC METHODOLOGY APPLIED
+
+Following "Effective harnesses for long-running agents" approach:
+- ✅ Use git commits with descriptive messages
+- ✅ Track progress in claude-progress.txt
+- ✅ Break work into incremental sessions
+- ✅ Leave clear artifacts for next session
+- ✅ Keep context manageable across windows
+
+KISS Principle Applied:
+- ❌ No ML models or complex statistical analysis
+- ❌ No database migrations or schema redesigns
+- ❌ No forecasting or predictive features (yet)
+- ✅ Simple frequency counting and date arithmetic
+- ✅ Leverage existing encryption/validation infrastructure
+- ✅ Keep CLI interface consistent
+
+---
+
+PROPOSED FEATURES (SIMPLE & ACTIONABLE)
+
+Feature 1: Subscription Detection
+- Detect same merchant appearing regularly (monthly pattern most common)
+- Algorithm: Group by address, check if dates are ~30 days apart
+- Criteria: 3+ occurrences with 25-35 day intervals = likely subscription
+- Show: Address, amount, frequency, total spent, next expected date
+
+Feature 2: Frequent Merchants
+- Rank merchants by transaction count and total spending
+- Show top 10 merchants you spend most with
+- Categorize: "You buy from Amazon 47 times/year ($2,341)"
+
+Feature 3: Spending Habit Insights
+- Investment categories: Savings, Stable Investments, High-Risk, Arbitrage, Retirement
+- Consumption categories: Everything else
+- Calculate investment rate: investment_total / total_spending
+- Show monthly spending trends per category
+- Simple anomaly detection: flag months with >2x average spending
+
+Feature 4: CLI Commands
+- `python main.py patterns` - Show all insights (subscriptions + habits)
+- `python main.py patterns --subscriptions` - Only subscriptions
+- `python main.py patterns --merchants` - Only frequent merchants
+- Extend `report` with `--patterns` flag for combined view
+
+---
+
+TECHNICAL DESIGN (KISS APPROACH)
+
+Storage Schema Change:
+```python
+# Current structure (storage/hash_table.json):
+{
+    "transaction_ids": ["hash1", "hash2", ...],
+    "addresses": {"encrypted_hash": "Category Name"},
+    "categories": {"Category Name": 12345.67}
+}
+
+# NEW structure (backward compatible):
+{
+    "transaction_ids": ["hash1", "hash2", ...],
+    "addresses": {"encrypted_hash": "Category Name"},
+    "categories": {"Category Name": 12345.67},
+    "transactions": [  # NEW FIELD
+        {
+            "date": "2024-01-15",  # ISO format YYYY-MM-DD
+            "address_hash": "encrypted_hash",  # Encrypted, same as in addresses
+            "amount": 99.99,  # Float
+            "category": "Entertainment"  # String
+        }
+    ]
+}
+```
+
+Migration Strategy:
+- If "transactions" key doesn't exist, create empty list
+- New transactions append to list during processing
+- Old data: category totals still work (no breaking changes)
+- New data: enables pattern detection
+
+Algorithm Pseudocode:
+
+```python
+# Subscription Detection
+def detect_subscriptions(transactions):
+    # Group by address_hash
+    grouped = group_by(transactions, 'address_hash')
+
+    subscriptions = []
+    for address_hash, txns in grouped.items():
+        if len(txns) < 3:
+            continue  # Need 3+ occurrences
+
+        # Sort by date
+        sorted_txns = sort_by_date(txns)
+
+        # Calculate intervals between consecutive transactions
+        intervals = []
+        for i in range(1, len(sorted_txns)):
+            days = date_diff(sorted_txns[i], sorted_txns[i-1])
+            intervals.append(days)
+
+        # Check if intervals are consistent (~monthly: 25-35 days)
+        avg_interval = mean(intervals)
+        if 25 <= avg_interval <= 35:
+            # Check amount consistency (within 10%)
+            amounts = [t['amount'] for t in sorted_txns]
+            if coefficient_of_variation(amounts) < 0.1:
+                subscriptions.append({
+                    'address': decrypt(address_hash),
+                    'amount': mean(amounts),
+                    'frequency': 'monthly',
+                    'count': len(txns),
+                    'total': sum(amounts),
+                    'last_date': sorted_txns[-1]['date']
+                })
+
+    return subscriptions
+
+# Spending Trends
+def analyze_spending_trends(transactions):
+    # Group by category and month
+    monthly_spending = {}
+    for txn in transactions:
+        month = txn['date'][:7]  # YYYY-MM
+        category = txn['category']
+
+        if month not in monthly_spending:
+            monthly_spending[month] = {}
+
+        if category not in monthly_spending[month]:
+            monthly_spending[month][category] = 0.0
+
+        monthly_spending[month][category] += txn['amount']
+
+    return monthly_spending
+```
+
+---
+
+IMPLEMENTATION PLAN (SESSIONS)
+
+Session 1: Storage Extension [FOUNDATION]
+Tasks:
+- [ ] Extend HashTable class to support transactions list
+- [ ] Add save_transaction() method
+- [ ] Update load_hash_table() to handle missing transactions key
+- [ ] Update save_hash_table() to include transactions
+- [ ] Write migration function (backward compatible)
+- [ ] Update process_csv_file() to call save_transaction()
+- [ ] Write unit tests (15+ tests)
+- [ ] Commit: "feat: Add transaction history storage"
+
+Session 2: Subscription Detection [CORE FEATURE]
+Tasks:
+- [ ] Create package/patterns.py module
+- [ ] Implement detect_subscriptions() function
+- [ ] Add group_transactions_by_address() helper
+- [ ] Add calculate_intervals() helper
+- [ ] Add is_consistent_interval() helper (25-35 days)
+- [ ] Add is_consistent_amount() helper (<10% variance)
+- [ ] Write unit tests (20+ tests with mock data)
+- [ ] Commit: "feat: Implement subscription detection algorithm"
+
+Session 3: Merchant Analysis [INSIGHTS]
+Tasks:
+- [ ] Add get_top_merchants() function to patterns.py
+- [ ] Add analyze_spending_trends() function
+- [ ] Add calculate_investment_rate() function
+- [ ] Add detect_spending_anomalies() function
+- [ ] Write unit tests (15+ tests)
+- [ ] Commit: "feat: Add merchant and spending analysis"
+
+Session 4: CLI Commands [USER INTERFACE]
+Tasks:
+- [ ] Add cmd_patterns() handler to main.py
+- [ ] Add patterns subparser to argparse
+- [ ] Add display_subscriptions() to cli.py
+- [ ] Add display_top_merchants() to cli.py
+- [ ] Add display_spending_insights() to cli.py
+- [ ] Extend cmd_report() with --patterns flag
+- [ ] Write unit tests for CLI functions (10+ tests)
+- [ ] Commit: "feat: Add patterns command for subscription insights"
+
+Session 5: Testing & Documentation [POLISH]
+Tasks:
+- [ ] Integration tests with real CSV data
+- [ ] Manual test procedure document
+- [ ] Update README.md with patterns command
+- [ ] Add help topic for patterns (help.py)
+- [ ] Performance testing (10k+ transactions)
+- [ ] Edge case testing (no subscriptions, single month data)
+- [ ] Commit: "docs: Add patterns documentation and tests"
+
+---
+
+SUCCESS CRITERIA
+
+Functional Requirements:
+✅ Detect monthly subscriptions with >80% accuracy
+✅ Identify top 10 merchants by frequency and spending
+✅ Calculate investment vs. consumption ratio
+✅ Maintain backward compatibility with existing data
+✅ Handle edge cases (insufficient data, irregular patterns)
+
+Code Quality:
+✅ <500 lines of new code (KISS principle)
+✅ Test coverage >85% for new code
+✅ Zero breaking changes to existing commands
+✅ Consistent code style with existing codebase
+
+User Experience:
+✅ Clear, actionable insights (not just data dumps)
+✅ Fast execution (<1 second for 1000 transactions)
+✅ Intuitive CLI commands matching existing patterns
+✅ Helpful error messages for edge cases
+
+---
+
+RISKS & MITIGATIONS
+
+Risk 1: Storage file size growth
+- Mitigation: Transactions list grows linearly, encrypted addresses are reused
+- Estimate: 100 bytes/transaction → 10k transactions = 1MB (acceptable)
+
+Risk 2: Backward compatibility
+- Mitigation: Transactions key is optional, old code works without it
+- Strategy: Defensive loading (default to empty list if missing)
+
+Risk 3: False positives in subscription detection
+- Mitigation: Require 3+ occurrences and strict interval/amount consistency
+- Fallback: User can manually categorize as "not subscription"
+
+Risk 4: Performance with large datasets
+- Mitigation: Simple algorithms (no nested loops), efficient grouping
+- Testing: Benchmark with 10k transactions
+
+---
+
+QUESTIONS FOR USER APPROVAL
+
+1. ✅ Feature scope: Subscriptions + merchant analysis + investment insights?
+2. ✅ Storage approach: Append transactions to existing hash table?
+3. ⚠️ CLI interface: New `patterns` command or extend `report`?
+4. ⚠️ Subscription criteria: 3+ occurrences, 25-35 day intervals, <10% amount variance?
+5. ⚠️ Implementation order: Storage → Detection → Analysis → CLI → Tests?
+
+---
+
+NEXT ACTIONS
+
+1. Present plan to user for review
+2. Get approval on technical approach
+3. Clarify any open questions
+4. Begin Session 1 implementation
+5. Commit progress incrementally
+
+---
+
+Status: AWAITING USER APPROVAL
+Last updated: 2025-12-13
