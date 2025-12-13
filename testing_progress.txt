@@ -1,0 +1,77 @@
+=== F.U.C.K. Testing Progress Tracker ===
+
+Following Anthropic's methodology for systematic, incremental testing
+Started: 2025-12-13
+
+---
+
+PHASE 1: Unit Tests (Mock-Heavy)
+[ ] 1.1 Crypto module tests (tests/test_crypto.py)
+    - Key derivation
+    - Encrypt/decrypt roundtrip
+    - Hash determinism
+    - Invalid password handling
+
+[ ] 1.2 Storage module tests (tests/test_storage.py)
+    - Initialize hash table
+    - Save/load with mocked crypto
+    - Get categories and totals
+    - Corrupted file handling
+
+[ ] 1.3 CSV reading tests (tests/test_read_data.py)
+    - Parse standard CSV
+    - Handle missing columns
+    - Malformed CSV handling
+    - Column mapping respect
+    - File size limits
+
+[ ] 1.4 Category manager tests (tests/test_category_manager.py)
+    - Lookup existing address
+    - New address prompt (mocked)
+    - Update hash table
+    - Duplicate address handling
+
+---
+
+PHASE 2: Integration Tests
+[ ] 2.1 Crypto + Storage integration
+    - Full encrypt/decrypt cycle with real crypto
+
+[ ] 2.2 CSV + Category Manager integration
+    - Pipeline processing with mocked prompts
+
+[ ] 2.3 Full pipeline mock test
+    - End-to-end with mocked user input only
+
+---
+
+PHASE 3: Manual End-to-End Tests
+[ ] 3.1 First-time setup test
+    - Clean environment, first run, verify files created
+
+[ ] 3.2 Incremental processing test
+    - Second file, verify no duplicates, accumulation
+
+[ ] 3.3 Error recovery test
+    - Ctrl+C handling, save progress, resume
+
+[ ] 3.4 Wrong password test
+    - Security validation, wrong key rejected
+
+[ ] 3.5 Malicious CSV test
+    - SQL injection blocked, path traversal sanitized
+
+[ ] 3.6 Multi-bank format test
+    - Column mapping per bank, auto-load on re-process
+
+---
+
+BUGS FOUND DURING TESTING:
+(none yet)
+
+---
+
+COMPLETION STATUS: 0/13 tasks complete (0%)
+
+Last updated: 2025-12-13
+Updated by: Testing plan created
