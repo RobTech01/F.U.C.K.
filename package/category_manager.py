@@ -87,6 +87,10 @@ def categorize_transaction(transaction : dict, hash_table : dict, cipher_suite, 
     hash_table['categories'].setdefault(category, 0)
     hash_table['categories'][category] += transaction['amount']
 
+    # Save individual transaction for pattern analysis
+    from .storage import save_transaction
+    save_transaction(hash_table, transaction['date'], encrypted_hashed_address, transaction['amount'], category)
+
     cli.print_transaction_info(transaction, category, hash_table['categories'][category])
 
 

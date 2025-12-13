@@ -7,7 +7,7 @@ HASH_TABLE_FILE : str = path_to_your_hash_table
 
 def initialize_hash_table() -> dict:
     """Initializes the hash table with necessary structure."""
-    return {"transaction_ids": [], "categories": {}, "addresses": {}}
+    return {"transaction_ids": [], "categories": {}, "addresses": {}, "transactions": []}
 
 
 def save_hash_table(hash_table : dict, cipher_suite) -> None:
@@ -31,7 +31,7 @@ def load_hash_table(cipher_suite) -> dict:
     Loads and decrypts the hash table from a file. This function reads the encrypted data from
     the specified file, decrypts it using the Fernet cipher suite, and converts the JSON string
     back into a dictionary.
-    
+
     Returns:
         dict: The decrypted hash table. If the file does not exist, returns an initialized dictionary.
     """
@@ -40,7 +40,14 @@ def load_hash_table(cipher_suite) -> dict:
             encrypted_data = file.read()
         print("Loading saved data..")
         decrypted_data = cipher_suite.decrypt(encrypted_data)
-        return json.loads(decrypted_data.decode())
+        hash_table = json.loads(decrypted_data.decode())
+
+        # Backward compatibility: add transactions list if missing
+        if 'transactions' not in hash_table:
+            hash_table['transactions'] = []
+            print("✓ Migrated hash table to support transaction history")
+
+        return hash_table
     except FileNotFoundError:
         return initialize_hash_table()  # Init an empty hash table if file does not exist
 
@@ -111,6 +118,30 @@ def filter_categories(
         filtered[category] = total
 
     return filtered
+
+
+def save_transaction(hash_table: dict, date: str, address_hash: str, amount: float, category: str) -> None:
+    """
+    Save an individual transaction to the transactions list.
+
+    Args:
+        hash_table: Hash table to store the transaction in
+        date: Transaction date (ISO format YYYY-MM-DD recommended)
+        address_hash: Encrypted hashed address
+        amount: Transaction amount
+        category: Category name
+    """
+    if 'transactions' not in hash_table:
+        hash_table['transactions'] = []
+
+    transaction = {
+        'date': date,
+        'address_hash': address_hash,
+        'amount': amount,
+        'category': category
+    }
+
+    hash_table['transactions'].append(transaction)
 
 
 def test_secure_storage():

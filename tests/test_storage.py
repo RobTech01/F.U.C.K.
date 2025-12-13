@@ -13,7 +13,8 @@ from package.storage import (
     save_hash_table,
     load_hash_table,
     get_categories_and_totals,
-    print_hash_table
+    print_hash_table,
+    save_transaction
 )
 
 
@@ -28,6 +29,7 @@ class TestInitializeHashTable(unittest.TestCase):
         self.assertIn('transaction_ids', hash_table)
         self.assertIn('categories', hash_table)
         self.assertIn('addresses', hash_table)
+        self.assertIn('transactions', hash_table)
 
     def test_initialize_creates_empty_structures(self):
         """Test that initialization creates empty collections"""
@@ -36,6 +38,7 @@ class TestInitializeHashTable(unittest.TestCase):
         self.assertEqual(hash_table['transaction_ids'], [])
         self.assertEqual(hash_table['categories'], {})
         self.assertEqual(hash_table['addresses'], {})
+        self.assertEqual(hash_table['transactions'], [])
 
     def test_initialize_returns_new_instance(self):
         """Test that each call returns a new instance"""
@@ -311,6 +314,133 @@ class TestStorageIntegration(unittest.TestCase):
             # Verify all data persisted
             self.assertEqual(len(current_table['transaction_ids']), 5)
             self.assertEqual(len(current_table['categories']), 5)
+
+
+class TestBackwardCompatibility(unittest.TestCase):
+    """Test backward compatibility for transaction history"""
+
+    def setUp(self):
+        """Set up test environment"""
+        self.test_key = Fernet.generate_key()
+        self.cipher_suite = Fernet(self.test_key)
+        self.temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.enc')
+        self.temp_file.close()
+
+    def tearDown(self):
+        """Clean up"""
+        if os.path.exists(self.temp_file.name):
+            os.unlink(self.temp_file.name)
+
+    def test_load_old_format_adds_transactions_key(self):
+        """Test that loading old format hash table adds transactions key"""
+        # Create old format hash table (without transactions)
+        old_format_table = {
+            'transaction_ids': ['tx_001'],
+            'categories': {'Groceries/Food': 100.00},
+            'addresses': {'hash_store': 'Groceries/Food'}
+        }
+
+        with patch('package.storage.HASH_TABLE_FILE', self.temp_file.name):
+            # Save old format
+            save_hash_table(old_format_table, self.cipher_suite)
+
+            # Load - should add transactions key
+            with patch('builtins.print'):
+                loaded_table = load_hash_table(self.cipher_suite)
+
+        self.assertIn('transactions', loaded_table)
+        self.assertEqual(loaded_table['transactions'], [])
+        self.assertEqual(loaded_table['transaction_ids'], old_format_table['transaction_ids'])
+        self.assertEqual(loaded_table['categories'], old_format_table['categories'])
+
+    def test_load_new_format_preserves_transactions(self):
+        """Test that loading new format preserves transactions"""
+        new_format_table = initialize_hash_table()
+        new_format_table['transactions'].append({
+            'date': '2024-01-15',
+            'address_hash': 'encrypted_hash',
+            'amount': 99.99,
+            'category': 'Entertainment'
+        })
+
+        with patch('package.storage.HASH_TABLE_FILE', self.temp_file.name):
+            save_hash_table(new_format_table, self.cipher_suite)
+            loaded_table = load_hash_table(self.cipher_suite)
+
+        self.assertEqual(loaded_table, new_format_table)
+        self.assertEqual(len(loaded_table['transactions']), 1)
+
+
+class TestSaveTransaction(unittest.TestCase):
+    """Test save_transaction function"""
+
+    def test_save_transaction_adds_to_list(self):
+        """Test that save_transaction adds transaction to list"""
+        hash_table = initialize_hash_table()
+
+        save_transaction(hash_table, '2024-01-15', 'enc_hash_123', 99.99, 'Entertainment')
+
+        self.assertEqual(len(hash_table['transactions']), 1)
+        self.assertEqual(hash_table['transactions'][0]['date'], '2024-01-15')
+        self.assertEqual(hash_table['transactions'][0]['address_hash'], 'enc_hash_123')
+        self.assertEqual(hash_table['transactions'][0]['amount'], 99.99)
+        self.assertEqual(hash_table['transactions'][0]['category'], 'Entertainment')
+
+    def test_save_transaction_creates_list_if_missing(self):
+        """Test that save_transaction creates transactions list if missing"""
+        # Hash table without transactions key (old format)
+        hash_table = {
+            'transaction_ids': [],
+            'categories': {},
+            'addresses': {}
+        }
+
+        save_transaction(hash_table, '2024-01-15', 'enc_hash', 50.00, 'Food')
+
+        self.assertIn('transactions', hash_table)
+        self.assertEqual(len(hash_table['transactions']), 1)
+
+    def test_save_multiple_transactions(self):
+        """Test saving multiple transactions"""
+        hash_table = initialize_hash_table()
+
+        transactions_data = [
+            ('2024-01-15', 'hash1', 100.00, 'Food'),
+            ('2024-01-16', 'hash2', 200.00, 'Utilities'),
+            ('2024-01-17', 'hash1', 150.00, 'Food')
+        ]
+
+        for date, addr_hash, amount, category in transactions_data:
+            save_transaction(hash_table, date, addr_hash, amount, category)
+
+        self.assertEqual(len(hash_table['transactions']), 3)
+        self.assertEqual(hash_table['transactions'][0]['amount'], 100.00)
+        self.assertEqual(hash_table['transactions'][1]['category'], 'Utilities')
+        self.assertEqual(hash_table['transactions'][2]['date'], '2024-01-17')
+
+    def test_save_transaction_preserves_existing(self):
+        """Test that save_transaction preserves existing transactions"""
+        hash_table = initialize_hash_table()
+        hash_table['transactions'].append({
+            'date': '2024-01-01',
+            'address_hash': 'existing',
+            'amount': 50.00,
+            'category': 'Test'
+        })
+
+        save_transaction(hash_table, '2024-01-02', 'new_hash', 75.00, 'New')
+
+        self.assertEqual(len(hash_table['transactions']), 2)
+        self.assertEqual(hash_table['transactions'][0]['date'], '2024-01-01')
+        self.assertEqual(hash_table['transactions'][1]['date'], '2024-01-02')
+
+    def test_save_transaction_with_negative_amount(self):
+        """Test saving transaction with negative amount (income)"""
+        hash_table = initialize_hash_table()
+
+        save_transaction(hash_table, '2024-01-15', 'hash_salary', -5000.00, 'Salary')
+
+        self.assertEqual(hash_table['transactions'][0]['amount'], -5000.00)
 
 
 if __name__ == '__main__':
