@@ -485,6 +485,38 @@ def cmd_version(args):
     return 0
 
 
+def cmd_help(args):
+    """Display help for a specific topic."""
+    from package import help as help_module
+
+    try:
+        help_content = help_module.get_help_topic(args.topic)
+        print(help_content)
+        return 0
+    except Exception as e:
+        print(f"✗ Error displaying help: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+
+def cmd_init(args):
+    """Run the interactive setup wizard."""
+    try:
+        cli.run_setup_wizard()
+        return 0
+    except KeyboardInterrupt:
+        print("\n\nSetup wizard cancelled by user")
+        return 130
+    except Exception as e:
+        print(f"✗ Error running setup wizard: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -627,6 +659,26 @@ Examples:
         help='Show version information'
     )
     version_parser.set_defaults(func=cmd_version)
+
+    # Help command
+    help_parser = subparsers.add_parser(
+        'help',
+        help='Display help for a specific topic'
+    )
+    help_parser.add_argument(
+        'topic',
+        nargs='?',
+        type=str,
+        help='Help topic (setup, categories, csv-format, security)'
+    )
+    help_parser.set_defaults(func=cmd_help)
+
+    # Init command
+    init_parser = subparsers.add_parser(
+        'init',
+        help='Run interactive setup wizard for new users'
+    )
+    init_parser.set_defaults(func=cmd_init)
 
     # Parse arguments
     args = parser.parse_args()

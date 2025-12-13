@@ -517,3 +517,55 @@ def preview_bulk_changes(affected_list: List[str], new_category: str) -> None:
 
     print()
     print("="*80)
+
+
+def run_setup_wizard() -> None:
+    """
+    Run the interactive setup wizard for new users.
+    Guides through security setup, CSV preparation, and category structure.
+    """
+    from package import help as help_module
+
+    # Welcome
+    print(help_module.get_welcome_message())
+    try:
+        input()
+    except KeyboardInterrupt:
+        print("\n\nSetup cancelled by user.")
+        return
+
+    # Step 1: Security
+    print(help_module.get_security_wizard_section(), end='')
+    try:
+        has_keys = input().strip().lower()
+        if has_keys == 'y':
+            print("\nGreat! Make sure your environment variables are set:")
+            print("  - FUCK_GLOBAL_SALT")
+            print("  - FUCK_ENCRYPTION_KEY")
+            print("\nYou can verify with: echo $FUCK_GLOBAL_SALT")
+        else:
+            print("\nNo problem! When you run 'process' for the first time,")
+            print("F.U.C.K. will generate these automatically.")
+            print("\nMake sure to save the output - you'll need it!")
+    except KeyboardInterrupt:
+        print("\n\nSetup cancelled by user.")
+        return
+
+    # Step 2: CSV Preparation
+    print(help_module.get_csv_wizard_section(), end='')
+    try:
+        input()
+    except KeyboardInterrupt:
+        print("\n\nSetup cancelled by user.")
+        return
+
+    # Step 3: Category Structure
+    print(help_module.get_category_wizard_section(), end='')
+    try:
+        input()
+    except KeyboardInterrupt:
+        print("\n\nSetup cancelled by user.")
+        return
+
+    # Completion
+    print(help_module.get_completion_wizard_section())
