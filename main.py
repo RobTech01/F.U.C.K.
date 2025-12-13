@@ -469,6 +469,26 @@ def cmd_report(args):
                 print(f"Lowest: {stats['lowest'][0]} (${stats['lowest'][1]:.2f})")
             print("="*80)
 
+        # Show patterns if requested
+        if args.patterns:
+            from package.patterns import analyze_merchants, calculate_investment_rate
+
+            transactions = hash_table.get('transactions', [])
+
+            if not transactions:
+                print("\n" + "="*80)
+                print("No transaction history available for pattern analysis.")
+                print("Transaction history is only available for newly processed transactions.")
+                print("Process more CSV files to build up transaction history.")
+                print("="*80)
+            else:
+                # Analyze merchants and calculate investment rate
+                merchants = analyze_merchants(transactions, cipher_suite)
+                investment_data = calculate_investment_rate(transactions)
+
+                # Display patterns
+                cli.display_merchant_patterns(merchants, investment_data)
+
         return 0
 
     except Exception as e:
@@ -718,6 +738,11 @@ Examples:
         '--stats',
         action='store_true',
         help='Show additional statistics'
+    )
+    report_parser.add_argument(
+        '--patterns',
+        action='store_true',
+        help='Show spending patterns and merchant analysis'
     )
     report_parser.set_defaults(func=cmd_report)
 

@@ -628,14 +628,48 @@ Key Features:
 - Returns merchants sorted by total spending
 - Handles edge cases: empty data, single transactions, irregular patterns
 
-Session 3: CLI Integration [USER INTERFACE]
-- [ ] Extend cmd_report() with --patterns flag
-- [ ] Add display_merchant_patterns() to cli.py
-- [ ] Show top merchants by spending
-- [ ] Show regularity insights
-- [ ] Show investment rate
-- [ ] Unit tests (8 tests)
-- Commit: "feat: Add --patterns flag to report command"
+Session 3: CLI Integration [USER INTERFACE] ✓ COMPLETE
+- [✓] Extend cmd_report() with --patterns flag
+- [✓] Add display_merchant_patterns() to cli.py
+- [✓] Show top merchants by spending
+- [✓] Show regularity insights
+- [✓] Show investment rate
+- [✓] Unit tests (9 comprehensive tests)
+- [✓] Commit: "feat: Add --patterns flag to report command"
+
+Implementation Details:
+CLI Display (package/cli.py):
+- display_merchant_patterns(): Main display function (+84 lines)
+- Sections: Top Merchants, Regularity Breakdown, Investment vs Consumption
+- Shows top 10 merchants by default (configurable limit)
+- Icons for regularity types: 📅 weekly, 📆 monthly, 🗓️ yearly, 🔀 irregular, 1️⃣ single
+- Merchant details: total spending, transaction count, average amount, pattern, category
+- Regularity summary: counts and percentages for each pattern type
+- Investment breakdown: shows categories and percentages
+
+Command Integration (main.py):
+- Added --patterns flag to report command parser
+- Modified cmd_report() to handle --patterns flag
+- Imports patterns module dynamically when needed
+- Graceful handling when no transaction history available
+- Works standalone or combined with --stats flag
+
+Tests (tests/test_patterns_cli.py):
+- 9 comprehensive unit tests
+- Tests empty data handling
+- Tests single and multiple merchants
+- Tests regularity breakdown display
+- Tests investment rate display
+- Tests limit parameter
+- Tests long name truncation
+- Tests all regularity types
+- All syntax verified
+
+User Experience:
+- Command: `python main.py report --patterns`
+- Combined: `python main.py report --stats --patterns`
+- Clean, formatted output with clear sections
+- Actionable insights about spending habits
 
 Session 4: Testing & Documentation [POLISH]
 - [ ] Integration tests with dummy CSV data

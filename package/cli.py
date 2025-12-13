@@ -632,4 +632,88 @@ def print_validation_summary(validation_errors: List) -> None:
     print("  - Invalid amounts: Ensure amounts are numeric (no $, commas, etc.)")
     print("  - Missing fields: Add required date, address, or amount")
     print("  - Invalid dates: Use format YYYY-MM-DD or MM/DD/YYYY")
+
+
+def display_merchant_patterns(merchants, investment_data, limit=10):
+    """
+    Display merchant spending patterns with regularity insights.
+
+    Args:
+        merchants: List of merchant dicts from analyze_merchants()
+        investment_data: Dict from calculate_investment_rate()
+        limit: Maximum number of merchants to display (default: 10)
+    """
+    print("\n" + "="*80)
+    print("SPENDING PATTERNS & MERCHANT ANALYSIS")
+    print("="*80)
+
+    if not merchants:
+        print("\nNo transaction data available for pattern analysis.")
+        print("Process some transactions first to see spending patterns.")
+        return
+
+    # Top merchants section
+    print("\nTOP MERCHANTS BY SPENDING:")
+    print("-" * 80)
+
+    top_merchants = merchants[:limit]
+
+    for i, merchant in enumerate(top_merchants, 1):
+        regularity_icon = {
+            'weekly': '📅',
+            'monthly': '📆',
+            'yearly': '🗓️',
+            'irregular': '🔀',
+            'single': '1️⃣'
+        }.get(merchant['regularity'], '•')
+
+        print(f"{i:2d}. {merchant['address'][:50]}")
+        print(f"    Total: ${merchant['total']:,.2f} | "
+              f"Transactions: {merchant['count']} | "
+              f"Avg: ${merchant['avg_amount']:,.2f}")
+        print(f"    Pattern: {regularity_icon} {merchant['regularity'].capitalize()} | "
+              f"Category: {merchant['category']}")
+        print()
+
+    # Regularity summary
+    print("="*80)
+    print("REGULARITY BREAKDOWN:")
+    print("-" * 80)
+
+    regularity_counts = {}
+    for merchant in merchants:
+        reg = merchant['regularity']
+        regularity_counts[reg] = regularity_counts.get(reg, 0) + 1
+
+    for regularity in ['weekly', 'monthly', 'yearly', 'irregular', 'single']:
+        count = regularity_counts.get(regularity, 0)
+        if count > 0:
+            percentage = (count / len(merchants)) * 100
+            print(f"  {regularity.capitalize():12s}: {count:3d} merchants ({percentage:5.1f}%)")
+
+    # Investment rate section
+    print("\n" + "="*80)
+    print("INVESTMENT VS. CONSUMPTION:")
+    print("-" * 80)
+
+    inv_rate = investment_data['investment_rate']
+    inv_total = investment_data['investment_total']
+    cons_total = investment_data['consumption_total']
+    total = investment_data['total_spending']
+
+    print(f"  Investment:   ${inv_total:,.2f} ({inv_rate:.1f}%)")
+    print(f"  Consumption:  ${cons_total:,.2f} ({100-inv_rate:.1f}%)")
+    print(f"  Total:        ${total:,.2f}")
+
+    if investment_data['investment_breakdown']:
+        print("\n  Investment Breakdown:")
+        for category, amount in sorted(
+            investment_data['investment_breakdown'].items(),
+            key=lambda x: x[1],
+            reverse=True
+        ):
+            percentage = (amount / inv_total * 100) if inv_total > 0 else 0
+            print(f"    - {category}: ${amount:,.2f} ({percentage:.1f}%)")
+
+    print("="*80)
     print("="*80)
