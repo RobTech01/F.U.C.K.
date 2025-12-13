@@ -21,33 +21,84 @@ def cmd_process(args):
     """Process a CSV file and categorize transactions."""
     print(f"Processing CSV file: {args.csv_file}")
 
-    # Initialize crypto
-    cipher_suite, SALT = initialize_crypto()
-
-    # Load hash table
-    hash_table = load_hash_table(cipher_suite)
-    print("Hash table loaded successfully.")
-
-    # Process CSV file
+    # Initialize crypto with error handling
     try:
-        process_csv_file(args.csv_file, hash_table, cipher_suite, SALT)
-        print("CSV file processed successfully.")
-    except FileNotFoundError:
-        print(f"Error: File not found: {args.csv_file}")
-        return 1
+        cipher_suite, SALT = initialize_crypto()
+    except KeyboardInterrupt:
+        print("\nCrypto initialization cancelled by user")
+        return 130
     except Exception as e:
-        print(f"Error processing CSV: {e}")
+        print(f"Error initializing crypto: {e}")
         if args.verbose:
             import traceback
             traceback.print_exc()
         return 1
 
-    # Save hash table
+    # Load hash table with error handling
+    try:
+        hash_table = load_hash_table(cipher_suite)
+        print("Hash table loaded successfully.")
+    except Exception as e:
+        print(f"Error loading hash table: {e}")
+        if cli.confirm_action("Start with a new empty hash table?"):
+            from package.storage import initialize_hash_table
+            hash_table = initialize_hash_table()
+            print("Initialized new hash table.")
+        else:
+            print("Cannot proceed without hash table.")
+            return 1
+
+    # Process CSV file with comprehensive error handling
+    try:
+        stats = process_csv_file(args.csv_file, hash_table, cipher_suite, SALT)
+        print(f"\n✓ CSV file processed successfully.")
+        print(f"  Processed: {stats['processed']}/{stats['total']} transactions")
+        if stats['skipped'] > 0:
+            print(f"  Skipped: {stats['skipped']} transactions (validation errors)")
+        if stats['errors'] > 0:
+            print(f"  Errors: {stats['errors']} transactions (processing errors)")
+    except FileNotFoundError:
+        print(f"✗ Error: File not found: {args.csv_file}")
+        return 1
+    except ValueError as e:
+        print(f"✗ Error: Invalid CSV file: {e}")
+        return 1
+    except KeyboardInterrupt:
+        print("\n\nProcessing interrupted by user.")
+        if cli.confirm_action("Save progress so far?"):
+            try:
+                save_hash_table(hash_table, cipher_suite)
+                print("✓ Progress saved successfully.")
+                return 130
+            except Exception as e:
+                print(f"✗ Error saving progress: {e}")
+                return 1
+        else:
+            print("Progress discarded.")
+            return 130
+    except Exception as e:
+        print(f"✗ Error processing CSV: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        if cli.confirm_action("Save partial results?"):
+            try:
+                save_hash_table(hash_table, cipher_suite)
+                print("✓ Partial results saved.")
+            except Exception as save_error:
+                print(f"✗ Error saving partial results: {save_error}")
+        return 1
+
+    # Save hash table with error handling
     try:
         save_hash_table(hash_table, cipher_suite)
-        print("Hash table saved successfully.")
+        print("✓ Hash table saved successfully.")
     except Exception as e:
-        print(f"Error saving hash table: {e}")
+        print(f"✗ Error saving hash table: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        print("WARNING: Changes were not saved! Hash table may be corrupted.")
         return 1
 
     return 0
@@ -57,38 +108,80 @@ def cmd_view(args):
     """View category totals."""
     print("Viewing category totals...")
 
-    # Initialize crypto
-    cipher_suite, SALT = initialize_crypto()
+    # Initialize crypto with error handling
+    try:
+        cipher_suite, SALT = initialize_crypto()
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user")
+        return 130
+    except Exception as e:
+        print(f"Error initializing crypto: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
 
-    # Load hash table
-    hash_table = load_hash_table(cipher_suite)
+    # Load hash table with error handling
+    try:
+        hash_table = load_hash_table(cipher_suite)
+    except FileNotFoundError:
+        print("✗ Error: No hash table found. Process a CSV file first.")
+        return 1
+    except Exception as e:
+        print(f"✗ Error loading hash table: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
 
-    if args.all:
-        print_hash_table(hash_table)
-    else:
-        categories = get_categories_and_totals(hash_table)
+    # Display data with error handling
+    try:
+        if args.all:
+            print_hash_table(hash_table)
+        else:
+            categories = get_categories_and_totals(hash_table)
+    except Exception as e:
+        print(f"✗ Error displaying data: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
 
     return 0
 
 
 def cmd_config(args):
     """View or edit configuration."""
-    config = Config.load()
+    try:
+        config = Config.load()
+    except Exception as e:
+        print(f"✗ Error loading configuration: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
 
-    if args.show:
-        print(f"\nConfiguration:")
-        print(f"  Storage directory: {config.storage_dir}")
-        print(f"  Hash table file: {config.hash_table_file}")
-        print(f"  Config file: {config.config_file}")
-        print(f"  Saved column mappings: {len(config.column_mappings)}")
-        print(f"  Default categories: {len(config.default_categories)}")
+    try:
+        if args.show:
+            print(f"\nConfiguration:")
+            print(f"  Storage directory: {config.storage_dir}")
+            print(f"  Hash table file: {config.hash_table_file}")
+            print(f"  Config file: {config.config_file}")
+            print(f"  Saved column mappings: {len(config.column_mappings)}")
+            print(f"  Default categories: {len(config.default_categories)}")
 
-    elif args.list_categories:
-        print("\nDefault Categories:")
-        for i, cat in enumerate(config.default_categories, 1):
-            print(f"  {i}. {cat}")
+        elif args.list_categories:
+            print("\nDefault Categories:")
+            for i, cat in enumerate(config.default_categories, 1):
+                print(f"  {i}. {cat}")
 
-    return 0
+        return 0
+    except Exception as e:
+        print(f"✗ Error displaying configuration: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
 
 
 def cmd_version(args):
