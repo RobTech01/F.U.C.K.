@@ -1,0 +1,26 @@
+{
+  "storage_dir": "./storage",
+  "hash_table_file": "./storage/hash_table.enc",
+  "config_file": "./config.json",
+  "column_mappings": {
+    "0fd8c5614a82062c": {
+      "date": 0,
+      "amount": 1
+    }
+  },
+  "default_categories": [
+    "Groceries/Food",
+    "Utilities/Bills",
+    "Rent/Mortgage",
+    "Salary",
+    "Savings",
+    "Stable Investments",
+    "High-Risk Investments",
+    "Arbitrage/Resale Profits",
+    "Retirement",
+    "Entertainment/Leisure",
+    "Health & Wellness",
+    "Education",
+    "Miscellaneous/Other"
+  ]
+}

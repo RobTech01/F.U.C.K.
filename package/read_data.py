@@ -1,7 +1,7 @@
 import csv
 import argparse
 from .category_manager import categorize_transaction
-from .crypto_utils import initialize_crypto
+from .crypto import initialize_crypto
 from .storage import load_hash_table, save_hash_table, print_hash_table
 from typing import Tuple, List
 
