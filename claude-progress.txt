@@ -601,13 +601,32 @@ Implementation Details:
 - Transaction structure: {date, address_hash (encrypted), amount, category}
 - All tests written (syntax verified, env issue prevents running)
 
-Session 2: Merchant Pattern Analysis [CORE FEATURE]
-- [ ] Create package/patterns.py module
-- [ ] Implement analyze_merchants() function
-- [ ] Add regularity detection (weekly/monthly/yearly/irregular)
-- [ ] Add investment vs. consumption calculation
-- [ ] Unit tests (15 tests with mock data)
-- Commit: "feat: Add merchant pattern and regularity detection"
+Session 2: Merchant Pattern Analysis [CORE FEATURE] ✓ COMPLETE
+- [✓] Create package/patterns.py module
+- [✓] Implement analyze_merchants() function
+- [✓] Add regularity detection (weekly/monthly/yearly/irregular)
+- [✓] Add investment vs. consumption calculation
+- [✓] Unit tests (25 tests with comprehensive coverage)
+- [✓] Commit: "feat: Add merchant pattern and regularity detection"
+
+Implementation Details:
+- Created patterns.py with 250+ lines of well-documented code
+- parse_date(): Supports ISO, European, and US date formats
+- calculate_date_interval(): Calculate days between transactions
+- categorize_regularity(): Simple threshold-based categorization
+- analyze_merchants(): Groups by merchant, calculates regularity, sorts by spending
+- calculate_investment_rate(): Investment vs consumption analysis
+- get_top_merchants(): Extract top N merchants
+- get_merchants_by_regularity(): Filter by pattern type
+- 25 unit tests covering all functions and edge cases
+- All syntax verified
+
+Key Features:
+- Simple KISS algorithm: average interval determines regularity
+- Weekly: 5-10 days, Monthly: 20-40 days, Yearly: 330-400 days
+- Investment categories: Savings, Stable Investments, High-Risk, Arbitrage, Retirement
+- Returns merchants sorted by total spending
+- Handles edge cases: empty data, single transactions, irregular patterns
 
 Session 3: CLI Integration [USER INTERFACE]
 - [ ] Extend cmd_report() with --patterns flag
