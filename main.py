@@ -16,6 +16,7 @@ from package import (
 )
 from package.storage import print_hash_table, get_categories_and_totals, filter_categories
 from package.category_manager import search_addresses, recategorize_address, get_all_addresses_with_categories
+from package import reports
 
 
 def cmd_process(args):
@@ -313,6 +314,75 @@ def cmd_edit(args):
         return 1
 
 
+def cmd_report(args):
+    """Generate spending insights and reports."""
+    print("Generating spending report...")
+
+    # Initialize crypto with error handling
+    try:
+        cipher_suite, SALT = initialize_crypto()
+    except KeyboardInterrupt:
+        print("\nCrypto initialization cancelled by user")
+        return 130
+    except Exception as e:
+        print(f"Error initializing crypto: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+    # Load hash table with error handling
+    try:
+        hash_table = load_hash_table(cipher_suite)
+    except FileNotFoundError:
+        print("✗ Error: No hash table found. Process a CSV file first.")
+        return 1
+    except Exception as e:
+        print(f"✗ Error loading hash table: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+    try:
+        categories = hash_table.get('categories', {})
+
+        if not categories:
+            print("\nNo category data available for reporting.")
+            print("Process some transactions first with: python3 main.py process <csv_file>")
+            return 1
+
+        # Generate category breakdown report
+        report_data = reports.generate_category_breakdown(categories)
+
+        # Format and display
+        report_output = reports.format_category_report(report_data, show_bars=not args.no_bars)
+        print(report_output)
+
+        # Show statistics if requested
+        if args.stats:
+            stats = reports.calculate_category_statistics(categories)
+            print("\n" + "="*80)
+            print("STATISTICS")
+            print("="*80)
+            print(f"Average per category: ${stats['mean']:.2f}")
+            print(f"Median: ${stats['median']:.2f}")
+            if stats['highest']:
+                print(f"Highest: {stats['highest'][0]} (${stats['highest'][1]:.2f})")
+            if stats['lowest']:
+                print(f"Lowest: {stats['lowest'][0]} (${stats['lowest'][1]:.2f})")
+            print("="*80)
+
+        return 0
+
+    except Exception as e:
+        print(f"✗ Error generating report: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+
 def cmd_version(args):
     """Show version information."""
     import package
@@ -415,6 +485,23 @@ Examples:
         help='Search term to find addresses (optional, will prompt if not provided)'
     )
     edit_parser.set_defaults(func=cmd_edit)
+
+    # Report command
+    report_parser = subparsers.add_parser(
+        'report',
+        help='Generate spending insights and reports'
+    )
+    report_parser.add_argument(
+        '--no-bars',
+        action='store_true',
+        help='Disable ASCII bar charts'
+    )
+    report_parser.add_argument(
+        '--stats',
+        action='store_true',
+        help='Show additional statistics'
+    )
+    report_parser.set_defaults(func=cmd_report)
 
     # Version command
     version_parser = subparsers.add_parser(
