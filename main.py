@@ -15,6 +15,7 @@ from package import (
     cli
 )
 from package.storage import print_hash_table, get_categories_and_totals
+from package.category_manager import search_addresses, recategorize_address, get_all_addresses_with_categories
 
 
 def cmd_process(args):
@@ -185,6 +186,108 @@ def cmd_config(args):
         return 1
 
 
+def cmd_edit(args):
+    """Edit/recategorize an existing address."""
+    print("Edit Mode: Recategorize an address")
+
+    # Initialize crypto with error handling
+    try:
+        cipher_suite, SALT = initialize_crypto()
+    except KeyboardInterrupt:
+        print("\nCrypto initialization cancelled by user")
+        return 130
+    except Exception as e:
+        print(f"Error initializing crypto: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+    # Load hash table with error handling
+    try:
+        hash_table = load_hash_table(cipher_suite)
+    except FileNotFoundError:
+        print("✗ Error: No hash table found. Process a CSV file first.")
+        return 1
+    except Exception as e:
+        print(f"✗ Error loading hash table: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+    # Load config for categories
+    try:
+        config = Config.load()
+        available_categories = config.default_categories
+    except Exception as e:
+        print(f"Warning: Could not load config: {e}")
+        available_categories = []
+
+    try:
+        # If search term provided, use it; otherwise prompt
+        if args.search:
+            search_term = args.search
+        else:
+            search_term = input("\nEnter search term (address substring): ").strip()
+            if not search_term:
+                print("Search term required")
+                return 1
+
+        # Search for addresses
+        print(f"\nSearching for addresses matching '{search_term}'...")
+        results = search_addresses(hash_table, cipher_suite, search_term)
+
+        if not results:
+            print(f"\n✗ No addresses found matching '{search_term}'")
+            return 1
+
+        # Display results
+        cli.display_address_search_results(results)
+
+        # Let user select which address
+        selected = cli.select_address_from_results(results)
+        if not selected:
+            print("\nEdit cancelled")
+            return 0
+
+        address, current_category, encrypted_hash = selected
+
+        # Prompt for new category
+        new_category = cli.prompt_for_new_category(current_category, available_categories)
+        if not new_category:
+            print("\nEdit cancelled")
+            return 0
+
+        # Perform recategorization
+        success, message = recategorize_address(encrypted_hash, new_category, hash_table, cipher_suite)
+
+        if success:
+            # Save updated hash table
+            try:
+                save_hash_table(hash_table, cipher_suite)
+                print(f"\n✓ {message}")
+                print("✓ Changes saved successfully")
+                print("\nNote: Category totals will be updated when you next process this address")
+                return 0
+            except Exception as e:
+                print(f"✗ Error saving changes: {e}")
+                return 1
+        else:
+            print(f"\n✗ {message}")
+            return 1
+
+    except KeyboardInterrupt:
+        print("\n\nEdit cancelled by user")
+        return 130
+    except Exception as e:
+        print(f"✗ Error during edit: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+
 def cmd_version(args):
     """Show version information."""
     import package
@@ -260,6 +363,18 @@ Examples:
         help='List default categories'
     )
     config_parser.set_defaults(func=cmd_config)
+
+    # Edit command
+    edit_parser = subparsers.add_parser(
+        'edit',
+        help='Edit/recategorize an existing address'
+    )
+    edit_parser.add_argument(
+        '--search',
+        type=str,
+        help='Search term to find addresses (optional, will prompt if not provided)'
+    )
+    edit_parser.set_defaults(func=cmd_edit)
 
     # Version command
     version_parser = subparsers.add_parser(

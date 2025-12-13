@@ -349,3 +349,100 @@ def confirm_processing() -> str:
             continue
         else:
             print("Invalid choice. Please enter 'c', 'x', or 'e'.")
+
+
+def display_address_search_results(results: List[Tuple[str, str, str]]) -> None:
+    """
+    Display search results for addresses.
+
+    Args:
+        results: List of (address, category, encrypted_hash) tuples
+    """
+    if not results:
+        print("\nNo addresses found matching your search.")
+        return
+
+    print("\n" + "="*80)
+    print("SEARCH RESULTS")
+    print("="*80)
+    print(f"Found {len(results)} matching address(es):\n")
+    print(f"{'#':<4} {'Address':<40} {'Category':<30}")
+    print("-" * 80)
+
+    for idx, (address, category, _) in enumerate(results, 1):
+        addr_display = address[:40]
+        cat_display = category[:30]
+        print(f"{idx:<4} {addr_display:<40} {cat_display:<30}")
+
+    print("="*80)
+
+
+def select_address_from_results(results: List[Tuple[str, str, str]]) -> Optional[Tuple[str, str, str]]:
+    """
+    Prompt user to select an address from search results.
+
+    Args:
+        results: List of (address, category, encrypted_hash) tuples
+
+    Returns:
+        Selected tuple or None if cancelled
+    """
+    if not results:
+        return None
+
+    while True:
+        try:
+            user_input = input("\nSelect address number (or 'c' to cancel): ").strip()
+
+            if user_input.lower() == 'c':
+                return None
+
+            selection = int(user_input)
+            if 1 <= selection <= len(results):
+                return results[selection - 1]
+            else:
+                print(f"Please enter a number between 1 and {len(results)}")
+        except ValueError:
+            print("Invalid input. Please enter a number or 'c' to cancel.")
+        except KeyboardInterrupt:
+            print("\nCancelled by user")
+            return None
+
+
+def prompt_for_new_category(current_category: str, available_categories: List[str]) -> Optional[str]:
+    """
+    Prompt user for a new category when editing.
+
+    Args:
+        current_category: The current category
+        available_categories: List of available categories
+
+    Returns:
+        New category or None if cancelled
+    """
+    print(f"\nCurrent category: {current_category}")
+    print("\nAvailable categories:")
+
+    for i, category in enumerate(available_categories, 1):
+        marker = " (current)" if category == current_category else ""
+        print(f"{i}. {category}{marker}")
+    print("Or enter a new category name")
+    print("'c' to cancel")
+
+    while True:
+        user_input = input("\n> ").strip()
+
+        if user_input.lower() == 'c':
+            return None
+
+        if user_input.isdigit():
+            selection = int(user_input)
+            if 1 <= selection <= len(available_categories):
+                return available_categories[selection - 1]
+            else:
+                print(f"Please enter a number between 1 and {len(available_categories)}")
+        elif user_input:
+            # Custom category
+            return user_input
+        else:
+            print("Invalid input. Please enter a category number, name, or 'c' to cancel.")

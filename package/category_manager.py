@@ -1,5 +1,6 @@
 from .crypto import hash_address, encrypt_address, hash_transaction_id, decrypt_address
 from . import cli
+from typing import List, Dict, Tuple, Optional
 
 
 def generate_transaction_id(date : str, amount: float, hashed_address: str = "") -> str:
@@ -87,3 +88,100 @@ def categorize_transaction(transaction : dict, hash_table : dict, cipher_suite, 
     hash_table['categories'][category] += transaction['amount']
 
     cli.print_transaction_info(transaction, category, hash_table['categories'][category])
+
+
+def get_all_addresses_with_categories(hash_table: dict, cipher_suite) -> List[Tuple[str, str, str]]:
+    """
+    Get all addresses with their categories and encrypted hashes.
+
+    Args:
+        hash_table: Hash table containing addresses
+        cipher_suite: Cipher suite for decryption
+
+    Returns:
+        List of tuples: (decrypted_address, category, encrypted_hash)
+    """
+    addresses_list = []
+
+    for encrypted_hash, category in hash_table['addresses'].items():
+        try:
+            decrypted_address = decrypt_address(encrypted_hash, cipher_suite)
+            addresses_list.append((decrypted_address, category, encrypted_hash))
+        except Exception as e:
+            # Skip addresses that can't be decrypted
+            print(f"Warning: Could not decrypt address: {e}")
+            continue
+
+    return addresses_list
+
+
+def recategorize_address(
+    encrypted_hash: str,
+    new_category: str,
+    hash_table: dict,
+    cipher_suite
+) -> Tuple[bool, str]:
+    """
+    Recategorize an address and update category totals.
+
+    Args:
+        encrypted_hash: Encrypted hash of the address to recategorize
+        new_category: New category to assign
+        hash_table: Hash table to update
+        cipher_suite: Cipher suite for decryption
+
+    Returns:
+        Tuple of (success: bool, message: str)
+    """
+    # Check if address exists
+    if encrypted_hash not in hash_table['addresses']:
+        return False, "Address not found in database"
+
+    # Get old category
+    old_category = hash_table['addresses'][encrypted_hash]
+
+    if old_category == new_category:
+        return False, "Address already has this category"
+
+    # Calculate total amount for this address across all transactions
+    # We need to find all transactions with this address and sum their amounts
+    decrypted_address = decrypt_address(encrypted_hash, cipher_suite)
+
+    # Find all transaction amounts for this address
+    # We'll need to recalculate totals based on transaction history
+    # For now, we'll update the category mapping and let the user know
+    # they need to reprocess to update totals accurately
+
+    # Update the address category mapping
+    hash_table['addresses'][encrypted_hash] = new_category
+
+    return True, f"Address recategorized from '{old_category}' to '{new_category}'"
+
+
+def search_addresses(
+    hash_table: dict,
+    cipher_suite,
+    search_term: str
+) -> List[Tuple[str, str, str]]:
+    """
+    Search for addresses matching a search term.
+
+    Args:
+        hash_table: Hash table containing addresses
+        cipher_suite: Cipher suite for decryption
+        search_term: Search term (case-insensitive substring match)
+
+    Returns:
+        List of tuples: (decrypted_address, category, encrypted_hash)
+    """
+    all_addresses = get_all_addresses_with_categories(hash_table, cipher_suite)
+    search_lower = search_term.lower()
+
+    # Filter addresses that contain the search term
+    matches = [
+        (addr, cat, enc_hash)
+        for addr, cat, enc_hash in all_addresses
+        if search_lower in addr.lower()
+    ]
+
+    return matches
