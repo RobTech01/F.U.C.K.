@@ -14,7 +14,8 @@ The Fund Utilization and Categorization Kit (F.U.C.K.) is a locally run financia
 - **Filtering**: View categories by name or amount range
 - **Reports and Insights**: Generate spending breakdowns with percentages and ASCII charts
 - **Statistics**: Calculate mean, median, highest, and lowest spending categories
-- **Interactive Help**: Comprehensive help system with topics for setup, categories, CSV formats, and security
+- **Spending Patterns**: Analyze merchant spending patterns, detect recurring transactions, and track investment vs. consumption habits
+- **Interactive Help**: Comprehensive help system with topics for setup, categories, CSV formats, security, and patterns
 - **Setup Wizard**: Guided first-time setup for new users
 - **Strong Encryption**: All sensitive data encrypted with Fernet (AES-128)
 
@@ -166,6 +167,37 @@ Statistics include:
 - Average per category
 - Median spending
 - Highest and lowest categories
+
+### Spending Patterns Analysis
+
+Analyze your spending habits and detect recurring patterns:
+```bash
+python3 main.py report --patterns
+```
+
+The patterns analysis shows:
+- **Top Merchants by Spending**: Your top 10 merchants ranked by total spending
+- **Regularity Breakdown**: How often you shop at each merchant (Weekly, Monthly, Yearly, Irregular)
+- **Investment vs. Consumption**: Percentage of spending going to investments vs. regular expenses
+
+Pattern types:
+- **Weekly**: Purchases every 5-10 days (e.g., grocery stores)
+- **Monthly**: Purchases every 20-40 days (e.g., subscriptions, bills)
+- **Yearly**: Purchases every 330-400 days (e.g., annual fees)
+- **Irregular**: Purchases at varying intervals
+- **Single**: One-time purchases
+
+Combine with other report flags:
+```bash
+python3 main.py report --patterns --stats
+```
+
+**Note**: Pattern detection requires transaction history, which is only available for newly processed transactions. Process multiple CSV files to build up your transaction history.
+
+Get help on patterns:
+```bash
+python3 main.py help patterns
+```
 
 ## Configuration
 

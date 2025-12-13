@@ -659,19 +659,11 @@ def display_merchant_patterns(merchants, investment_data, limit=10):
     top_merchants = merchants[:limit]
 
     for i, merchant in enumerate(top_merchants, 1):
-        regularity_icon = {
-            'weekly': '📅',
-            'monthly': '📆',
-            'yearly': '🗓️',
-            'irregular': '🔀',
-            'single': '1️⃣'
-        }.get(merchant['regularity'], '•')
-
         print(f"{i:2d}. {merchant['address'][:50]}")
         print(f"    Total: ${merchant['total']:,.2f} | "
               f"Transactions: {merchant['count']} | "
               f"Avg: ${merchant['avg_amount']:,.2f}")
-        print(f"    Pattern: {regularity_icon} {merchant['regularity'].capitalize()} | "
+        print(f"    Pattern: {merchant['regularity'].capitalize()} | "
               f"Category: {merchant['category']}")
         print()
 

@@ -231,6 +231,94 @@ For maximum security:
 
 ================================================================================
 """,
+
+    "patterns": """
+================================================================================
+SPENDING PATTERNS & MERCHANT ANALYSIS
+================================================================================
+
+The patterns feature helps you understand your spending habits by analyzing
+transaction history and detecting recurring patterns.
+
+REQUIREMENTS:
+  - Transaction history data (only available for newly processed transactions)
+  - At least 2 transactions to detect patterns
+
+USAGE:
+  python3 main.py report --patterns
+
+  Combine with other flags:
+  python3 main.py report --patterns --stats
+  python3 main.py report --patterns --no-bars
+
+WHAT YOU'LL SEE:
+
+1. TOP MERCHANTS BY SPENDING
+   - Your top 10 merchants ranked by total spending
+   - Transaction count and average amount per merchant
+   - Spending pattern (Weekly, Monthly, Yearly, Irregular, or Single)
+   - Category for each merchant
+
+2. REGULARITY BREAKDOWN
+   - How many merchants fall into each pattern type
+   - Percentage distribution of spending patterns
+   - Pattern types:
+     * Weekly: Purchases every 5-10 days
+     * Monthly: Purchases every 20-40 days (subscriptions, bills)
+     * Yearly: Purchases every 330-400 days (annual fees, renewals)
+     * Irregular: Purchases at varying intervals
+     * Single: One-time purchases
+
+3. INVESTMENT VS. CONSUMPTION
+   - Investment rate: Percentage of spending going to investments
+   - Investment total: Amount spent on savings/investments
+   - Consumption total: Amount spent on regular expenses
+   - Investment breakdown by category:
+     - Savings
+     - Stable Investments
+     - High-Risk Investments
+     - Arbitrage/Resale Profits
+     - Retirement
+
+INTERPRETING PATTERNS:
+
+Monthly patterns often indicate:
+  - Subscriptions (Netflix, Spotify, gym membership)
+  - Recurring bills (utilities, rent, insurance)
+  - Regular purchases (groceries from same store)
+
+Weekly patterns suggest:
+  - Frequent shopping locations
+  - Regular grocery trips
+  - Weekly services or deliveries
+
+Yearly patterns typically show:
+  - Annual fees (memberships, licenses)
+  - Yearly subscriptions or renewals
+  - Seasonal purchases
+
+High investment rate (>20%) indicates:
+  - Strong savings discipline
+  - Regular investment contributions
+  - Good financial health
+
+TIPS:
+
+1. Build transaction history by processing multiple CSV files
+2. More data = better pattern detection
+3. Use patterns to identify:
+   - Forgotten subscriptions
+   - Excessive spending at certain merchants
+   - Opportunities to increase investment rate
+4. Compare patterns month-to-month to track changes
+
+NOTE:
+  Pattern detection requires transaction history. If you see
+  "No transaction history available", process more CSV files
+  to build up your history first.
+
+================================================================================
+""",
 }
 
 
@@ -275,6 +363,7 @@ Available help topics:
   categories  - How to manage and organize spending categories
   csv-format  - Understanding CSV file formats and requirements
   security    - Security features and encryption details
+  patterns    - Spending patterns and merchant analysis guide
 
 USAGE:
   python3 main.py help <topic>
