@@ -86,15 +86,15 @@
           "id": "2.5",
           "description": "Create core.py with pure business logic",
           "file": "package/core.py",
-          "implemented": false,
-          "tested": false
+          "implemented": true,
+          "tested": true
         },
         {
           "id": "2.6",
           "description": "Rewrite main.py as proper CLI entry point",
           "file": "main.py",
-          "implemented": false,
-          "tested": false
+          "implemented": true,
+          "tested": true
         }
       ]
     },
@@ -209,8 +209,8 @@
   },
   "progress": {
     "total_tasks": 25,
-    "implemented": 10,
-    "tested": 10,
-    "completion_percentage": 40
+    "implemented": 12,
+    "tested": 12,
+    "completion_percentage": 48
   }
 }
