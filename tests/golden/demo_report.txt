@@ -1,0 +1,19 @@
+========================================================================
+F.U.C.K. -- quarterly audit one-pager
+========================================================================
+
+1. Coverage
+   !! SIMULATED DATA -- synthetic demo numbers; no real exports were read !!
+
+2. The five numbers
+   savings rate          16.7%  solid            target: >=10% floor / 15-20% solid / 20%+ wealth-building
+   fixed-cost ratio      36.7%  acceptable       target: <30% comfortable / <=50% ceiling / >65% critical
+   recurring margin    EUR 4720.00  judged as a trend, run over run
+   income streams     salary 92.9%, freelance 7.1%
+   emergency fund     5.4 months  in_band          target: 3-6 months, a band not a maximum
+
+3. Fixed costs by annual cost
+   [not built yet -- fixed-cost ranking needs detect.py]
+
+4. Diff vs. last run
+   [not built yet -- decision verification needs diff.py]
