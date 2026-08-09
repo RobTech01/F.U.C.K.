@@ -1,43 +1,19 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+.venv/
+venv/
 
 # Environment
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
 
-# IDE
+# IDE / OS
 .vscode/
 .idea/
 *.swp
-*.swo
-*~
-
-# Project specific
-storage/*.enc
-*.db
-*.sqlite
 .DS_Store
+
+# Finance OS runtime data — never commit real financial data
+exports/
+snapshot.json
+journal.md
