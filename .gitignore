@@ -21,3 +21,6 @@ journal.md
 # Tooling caches / agent worktrees
 .pytest_cache/
 .worktrees/
+
+# Agent orchestration scratch (subagent-driven development)
+.superpowers/
