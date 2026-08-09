@@ -48,9 +48,10 @@ acting run on different clocks.
 2. **Monthly-lite (~5 min, optional):** note the net-worth number in
    Portfolio Performance; ambient glance at bank apps. Cheap, motivating,
    skippable.
-3. **Quarterly review (~60 min, nudged — THE ANCHOR):** see agenda below.
-   Gap-tolerant by design: skipping a quarter degrades nothing except
-   freshness.
+3. **On-demand review (~60 min — THE ANCHOR):** see agenda below. Usage is
+   sporadic and irregular, by need — the nutrition-tracker pattern: check
+   in when it itches, then back to autopilot. A quarter is a healthy
+   rhythm, not a rule; gaps degrade nothing except freshness.
 4. **Annual deep pass:** rebalancing (fixed date or ±5% threshold), FI
    number, pension gap, money dials.
 
@@ -64,7 +65,7 @@ Buy/adopt before build. Build only confirmed gaps.
 | Net worth + Depot | **Portfolio Performance** | Local, free, actively maintained; the DACH standard |
 | Ambient categorization | **Bank apps, in-silo** | They do this well now; no need to rebuild |
 | Taxes | Existing tax tools, annual topic | Deliberately outside the OS core (evaluated TaxHacker: architecture reference only, no German tax logic, no audit features) |
-| Nudge | Calendar or Claude routine, quarterly | A reminder problem, not a software problem |
+| Nudge | Optional safety net (e.g. a gentle reminder if idle >6 months) | Reviews run on demand; the nudge only catches total drift, guilt-free to ignore |
 | **Cross-silo audit + KPI computation** | **The one confirmed gap → the audit CLI** (designed, deferred) | Nothing local and trustworthy merges multiple banks + credit sources + PayPal and computes these KPIs |
 
 ## 4. Source export cheat sheet
@@ -83,7 +84,11 @@ spot-check against a real export before relying on them.
 names the real merchant) and de-duplicate against the bank-side PayPal
 debits — this shrinks the feared memo-parsing problem to a matching problem.
 
-## 5. Quarterly review agenda (~60 min)
+## 5. Review agenda (~60 min, on demand)
+
+Run sporadically, whenever the need arises — the agenda is identical
+whether two or eight months have passed. "Quarterly" cadences in §1 read
+as "per review".
 
 1. **Export** — pull CSVs from all four sources (paths above). ~10 min.
 2. **Run the audit** — *(once the CLI exists; until then: eyeball the

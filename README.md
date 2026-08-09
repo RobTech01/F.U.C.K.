@@ -23,7 +23,8 @@ Everything lives in [`docs/finance-os.md`](docs/finance-os.md):
   worth as stock metrics; FI number and pension gap as annual triggers.
 - **Cadence stack** — automation produces the numbers, reviews only audit
   them: payday standing order (no cadence), monthly glance (~5 min),
-  quarterly review (~60 min, the anchor), annual deep pass.
+  on-demand review (~60 min, the anchor — sporadic, by need), annual
+  deep pass.
 - **Tool chain** — buy/adopt before build: Portfolio Performance for net
   worth, bank apps for in-silo categorization, existing tax tools for taxes.
   Exactly one confirmed gap is worth building: the cross-silo audit CLI.

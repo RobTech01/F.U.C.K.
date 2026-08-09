@@ -27,15 +27,17 @@ converged on:
 
 ## Goal
 
-One command, run quarterly:
+One command, run on demand — sporadically, irregularly, by need:
 
 ```
 fuck audit exports/2026-Q3/*.csv
 ```
 
-reads that quarter's CSV exports (BBBank, Revolut, Trade Republic, PayPal),
-prints a one-page report along the quarterly-review agenda
+reads whatever CSV exports it is given (BBBank, Revolut, Trade Republic,
+PayPal), prints a one-page report along the review agenda
 (`docs/finance-os.md` §5), and updates a snapshot for the next run's diff.
+No run may assume when the previous one happened — any gap length is
+normal operation, not an edge case.
 
 ## Non-goals (scope guard)
 
