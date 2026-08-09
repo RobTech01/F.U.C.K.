@@ -21,6 +21,8 @@ skills in `.claude/skills/`, this file wins.
 - Run tests: `python -m pytest` (config in `pyproject.toml`).
 - Specs go to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`,
   plans to `docs/superpowers/plans/YYYY-MM-DD-<feature>.md`.
+- The backlog lives in GitHub Issues — check open issues when
+  cold-starting a session. Specs and plans stay in-repo as above.
 - Code review before merging to `main`.
 - Never claim tests pass without a fresh run in the same message.
 
