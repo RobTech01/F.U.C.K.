@@ -45,6 +45,10 @@ Everything lives in [`docs/finance-os.md`](docs/finance-os.md):
    beats willpower; the quarterly review checks the autopilot.
 4. **Lean is elegant.** V1 grew 10× in one day of unrequested features and
    died of it. V2 treats every added line as a liability.
+5. **Function-first modules.** Every component exists for the function it
+   fulfills; delivery layers (CLI today, maybe a UI someday) are thin,
+   replaceable shells around a delivery-agnostic core. New modules are
+   built when need presents itself in real use — never in anticipation.
 
 ## License
 

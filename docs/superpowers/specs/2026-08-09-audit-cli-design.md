@@ -39,12 +39,18 @@ prints a one-page report along the quarterly-review agenda
 
 ## Non-goals (scope guard)
 
-No server, no web UI, no budgeting, no transaction categorization beyond
-fixed/variable/transfer/income, no Depot analytics (Portfolio Performance
-owns that), no FinTS/PSD2, no tax logic, no encryption ceremony (nothing
-leaves the machine; the source CSVs already sit in Downloads in plaintext),
-no PyPI packaging. The detection core is cut as a clean module so a later
-library extraction stays cheap — that is the only concession to reuse.
+**Permanent non-goals:** no always-on server, no budgeting suite, no
+transaction categorization beyond fixed/variable/transfer/income, no Depot
+analytics (Portfolio Performance owns that), no FinTS/PSD2, no tax logic,
+no encryption ceremony (nothing leaves the machine; the source CSVs
+already sit in Downloads in plaintext).
+
+**Sequencing exclusions — not for the start, built only where need
+presents itself in real use:** interaction layers beyond the CLI (a UI is
+a possible later delivery shell, never the core), library/PyPI packaging,
+the LLM-assist module (below). Every component exists for the function it
+fulfills; the core stays delivery-agnostic so any later shell wraps the
+same modules unchanged.
 
 ## MVP scope: the deterministic core loop
 
@@ -63,6 +69,11 @@ parse → normalize → merge/dedupe (incl. transfer netting) → detect recurri
 - Anything interactive. The tool is a pure filter: files in, report out.
 
 ## Architecture (Python ≥3.10, stdlib-only)
+
+Function-first: each module below exists for exactly one function.
+`__main__.py` (the CLI) is only the first and thinnest delivery shell
+around a delivery-agnostic core — a later UI, Claude skill, or library
+import wraps the same modules without changing them.
 
 ```
 fuck/
