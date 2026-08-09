@@ -1,0 +1,6 @@
+# Tooling config only — packaging is a stated non-goal (audit-cli spec:
+# "No packaging, no marketing, no PyPI").
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

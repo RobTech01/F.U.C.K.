@@ -17,3 +17,7 @@ venv/
 exports/
 snapshot.json
 journal.md
+
+# Tooling caches / agent worktrees
+.pytest_cache/
+.worktrees/
