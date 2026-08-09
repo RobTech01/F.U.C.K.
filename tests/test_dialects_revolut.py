@@ -18,6 +18,7 @@ from fuck.dialects import revolut
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 EUR_FIXTURE = FIXTURES_DIR / "revolut_eur.csv"
 USD_FIXTURE = FIXTURES_DIR / "revolut_usd.csv"
+WINDOW_FIXTURE = FIXTURES_DIR / "revolut_eur_window.csv"
 
 
 @pytest.fixture(scope="module")
@@ -28,6 +29,11 @@ def eur_result():
 @pytest.fixture(scope="module")
 def usd_result():
     return revolut.parse(USD_FIXTURE)
+
+
+@pytest.fixture(scope="module")
+def window_result():
+    return revolut.parse(WINDOW_FIXTURE)
 
 
 def test_sniffs_accepts_revolut_header():
@@ -101,12 +107,57 @@ def test_tx_ids_unique_across_fixture(eur_result):
         int(tx_id, 16)  # raises ValueError if not hex
 
 
+def test_reexport_window_tx_ids_are_subset(eur_result, window_result):
+    # revolut_eur_window.csv is a byte-identical 3-row slice of
+    # revolut_eur.csv (coffee, supermarkt, transfer) standing in for an
+    # overlapping re-export chunk. Regression pin for the balance-based
+    # tx_id discriminator: as long as Balance hasn't shifted (see
+    # derive_tx_id's docstring), the same rows re-hash identically, so
+    # overlapping exports dedup instead of minting duplicate transactions.
+    window_ids = {tx.tx_id for tx in window_result.transactions}
+    full_ids = {tx.tx_id for tx in eur_result.transactions}
+    assert len(window_ids) == 3
+    assert window_ids <= full_ids
+
+
 def test_malformed_row_is_skipped_not_raised(tmp_path):
     bad_csv = tmp_path / "revolut_bad.csv"
     bad_csv.write_text(
         revolut.HEADER + "\n"
         "CARD_PAYMENT,Current,2026-07-01 00:00:00,2026-07-01 00:00:01,"
         "BAD ROW,abc,0.00,EUR,COMPLETED,100.00\n",
+        encoding="utf-8",
+    )
+    result = revolut.parse(bad_csv)
+    assert len(result.transactions) == 0
+    assert len(result.skipped) == 1
+    assert result.skipped[0].reason == "malformed"
+
+
+def test_empty_balance_row_still_parses(tmp_path):
+    # Balance is a hash discriminator, not transactional data -- a
+    # COMPLETED row missing it is still real money and must be counted.
+    csv_path = tmp_path / "revolut_empty_balance.csv"
+    csv_path.write_text(
+        revolut.HEADER + "\n"
+        "CARD_PAYMENT,Current,2026-07-01 00:00:00,2026-07-01 00:00:01,"
+        "SYNTH ROW,-10.00,0.00,EUR,COMPLETED,\n",
+        encoding="utf-8",
+    )
+    result = revolut.parse(csv_path)
+    assert len(result.transactions) == 1
+    assert len(result.skipped) == 0
+    assert len(result.transactions[0].tx_id) == 16
+    int(result.transactions[0].tx_id, 16)  # raises ValueError if not hex
+
+
+def test_truncated_row_is_malformed(tmp_path):
+    # A row missing the State column entirely (not just an unexpected
+    # value in it) is structurally broken, not a recognized state -- it
+    # must be "malformed", not the misleading "state=None".
+    bad_csv = tmp_path / "revolut_truncated.csv"
+    bad_csv.write_text(
+        revolut.HEADER + "\n" "CARD_PAYMENT,Current,2026-07-01 00:00:00\n",
         encoding="utf-8",
     )
     result = revolut.parse(bad_csv)
@@ -130,3 +181,13 @@ def test_unknown_dialect_error_names_file_and_previews(tmp_path):
     message = str(exc_info.value)
     assert mystery.name in message
     assert "Datum;Betrag" in message
+
+
+def test_bom_prefixed_export_is_recognized(tmp_path):
+    bom_csv = tmp_path / "revolut_bom.csv"
+    bom_csv.write_bytes(b"\xef\xbb\xbf" + EUR_FIXTURE.read_bytes())
+    sample = bom_csv.read_bytes()[: dialects.SNIFF_BYTES]
+    assert dialects.sniff(sample) == "revolut"
+    result = dialects.parse_file(bom_csv)
+    assert len(result.transactions) == 8
+    assert len(result.skipped) == 2

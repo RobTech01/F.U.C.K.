@@ -5,6 +5,15 @@ Frozen at docs/superpowers/specs/2026-08-09-audit-cli-design.md, section
 produce these; normalize.py fills payee_norm later. Data only, plus the
 one hash helper dialects use to derive stable, order-sensitive IDs --
 nothing else belongs here.
+
+Controlled vocabulary (part of the frozen contract; a new value is only
+introduced by extending this list first, here, before it appears in any
+dialect):
+
+- ``Transaction.quality`` flags: ``"non_eur_unconverted"``,
+  ``"fee_deducted"``.
+- ``SkippedRow.reason`` shapes: ``"state=<STATE>"`` (``STATE`` is the raw
+  status value the source used, e.g. ``"state=PENDING"``), ``"malformed"``.
 """
 
 from __future__ import annotations
@@ -51,8 +60,18 @@ def derive_tx_id(*parts: str) -> str:
 
     Dialects choose parts that are stable across re-exports of the same
     row (so overlapping exports dedup) and distinct between genuinely
-    different rows (include a per-row discriminator like Balance or a
-    source transaction code where available).
+    different rows. Per-row discriminator, ranked -- prefer (1), fall
+    back to (2) only when the source leaves no choice:
+
+    1. A source-native immutable transaction code (e.g. PayPal's
+       Transaktionscode), whenever the source provides one. PayPal MUST
+       use it.
+    2. A running balance, only as a last resort for sources with no row
+       ID of their own (Revolut today). This is unstable: a balance is
+       DERIVED state, not an identity. If an earlier PENDING row later
+       posts, every later row's balance shifts, so re-exporting the same
+       real transaction after that point re-hashes to a different
+       tx_id -- overlapping exports would then fail to dedup.
     """
     digest = hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()
     return digest[:16]

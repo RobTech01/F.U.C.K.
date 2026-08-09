@@ -183,6 +183,7 @@ transfer netting (no invented or vanished money: sum preserved).
 2. TR export: confirm delimiter/encoding/columns from a real file.
 3. PayPal `Typ` values for subscriptions — confirm or drop the signal.
 4. BBBank: are Mandatsreferenz/Gläubiger-ID separate columns or embedded?
+5. Revolut re-export: do already-completed rows keep a stable Balance once earlier pending rows post? Decides whether the balance-based tx_id discriminator survives real data.
 
 ## Estimate
 

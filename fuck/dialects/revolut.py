@@ -21,6 +21,10 @@ HEADER = "Type,Product,Started Date,Completed Date,Description,Amount,Fee,Curren
 
 # Columns a row must have a non-empty value for to be parseable. "State" is
 # checked separately (its own skip reason); "Started Date" is never used.
+# "Balance" is deliberately NOT required: it is only a per-row hash
+# discriminator (see derive_tx_id's docstring), not transactional data --
+# a COMPLETED row missing it is still real money and must be counted, not
+# skipped as malformed over a cosmetic column.
 _REQUIRED_FIELDS = (
     "Type",
     "Product",
@@ -29,12 +33,13 @@ _REQUIRED_FIELDS = (
     "Amount",
     "Fee",
     "Currency",
-    "Balance",
 )
 
 
 def sniffs(sample: bytes) -> bool:
-    text = sample.decode("utf-8", errors="replace")
+    # utf-8-sig strips a leading UTF-8 BOM if present and reads BOM-less
+    # files identically, so exports saved with a BOM still sniff correctly.
+    text = sample.decode("utf-8-sig", errors="replace")
     first_line = text.splitlines()[0] if text else ""
     return first_line.strip() == HEADER
 
@@ -43,10 +48,16 @@ def parse(path: Path) -> ParseResult:
     transactions: list[Transaction] = []
     skipped: list[SkippedRow] = []
 
-    with open(path, newline="", encoding="utf-8") as fh:
+    with open(path, newline="", encoding="utf-8-sig") as fh:
         reader = csv.DictReader(fh)
         for row in reader:
             state = row.get("State")
+            if state is None:
+                # Column missing entirely (a truncated row) -- structurally
+                # broken, not a recognized state; "state=None" would be
+                # misleading about what actually went wrong.
+                skipped.append(SkippedRow(reason="malformed", raw=repr(row)))
+                continue
             if state != "COMPLETED":
                 skipped.append(SkippedRow(reason=f"state={state}", raw=repr(row)))
                 continue
@@ -69,7 +80,7 @@ def parse(path: Path) -> ParseResult:
             currency = row["Currency"]
             description = row["Description"]
             product = row["Product"]
-            balance_raw = row["Balance"]
+            balance_raw = row.get("Balance") or ""
             booking_type = row["Type"]
 
             quality: list[str] = []
