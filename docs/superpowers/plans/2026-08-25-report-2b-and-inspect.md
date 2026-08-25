@@ -85,7 +85,7 @@ sum(amount_eur): EUR 1234.56 over 8 rows
 rows without EUR amount: 0
 quality flags: none
 skipped: 2 (state=PENDING: 1, state=REVERTED: 1)
-tx_id collisions: 0
+tx_id collisions (within this file): 0
 ```
 
 (Numbers above are format illustration — derive the real expectations
@@ -99,8 +99,12 @@ from the fixtures.) Details:
 - `quality flags:` counts per flag sorted by (-count, name), rendered
   `flag: n, flag: n`; `none` when empty. Same shape for skip reasons
   inside the `skipped:` parentheses; plain `skipped: 0` when none.
-- `tx_id collisions:` `len(txs) - len({t.tx_id for t in txs})` — the
-  live signal for the Balance-stability question (#6 experiment).
+- `tx_id collisions (within this file):` `len(txs) - len({t.tx_id for t
+  in txs})` — detects collisions inside this one export only. It is
+  NOT the #6 Balance-stability experiment (same window exported twice,
+  before and after a pending row posts, then diff the completed rows'
+  Balance) — that still needs the two exports; this command reads one
+  file at a time and has nothing to diff against.
 - ASCII only, no trailing whitespace.
 
 Tests (`tests/test_dialects_main.py`) — write first, red, then

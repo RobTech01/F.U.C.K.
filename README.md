@@ -36,6 +36,8 @@ Everything lives in [`docs/finance-os.md`](docs/finance-os.md):
 | Process (Finance OS v0.2) | **Live** — see `docs/finance-os.md` |
 | Audit/KPI CLI | **Designed, deliberately deferred** — see [`docs/superpowers/specs/2026-08-09-audit-cli-design.md`](docs/superpowers/specs/2026-08-09-audit-cli-design.md). MVP = deterministic core loop only; LLM-assist module explicitly cut from initial scope. |
 
+Try it: `python -m fuck.demo` (simulated one-pager) and `python -m fuck.dialects <csv>` (inspect a real export).
+
 ## Principles
 
 1. **The need is the goal; tools are replaceable links.** Any link that stops
