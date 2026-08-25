@@ -71,7 +71,8 @@ Interface: `main(argv: list[str] | None = None) -> int`, module-level
 
 - Not exactly one argument → usage line to stderr
   (`usage: python -m fuck.dialects <csv-file>`), return 2.
-- Missing/unreadable file → `no such file: <path>` to stderr, return 1.
+- Missing/unreadable file (any OSError) → `cannot read <path>: <err>` to
+  stderr, return 1.
 - `UnknownDialectError` → `str(e)` to stderr (it already names the file
   and previews <= 3 raw lines), return 1.
 - Success → report to stdout, return 0:
@@ -119,7 +120,7 @@ from the fixture files themselves:
 3. Unknown CSV (tmp_path, junk header) → rc 1; stderr names the file
    and includes its first raw line; stdout empty.
 4. No args → rc 2, usage on stderr.
-5. Nonexistent path → rc 1, `no such file:` on stderr.
+5. Nonexistent path → rc 1, `cannot read` on stderr.
 
 Invoke `main([...])` directly with `capsys`; do not spawn subprocesses.
 
@@ -130,6 +131,8 @@ Commit: `feat: add CSV inspect command (python -m fuck.dialects)`
 Decision-3 additions (run date, liquid-funds line, reminder line,
 income trend), README changes, CI changes, new dialects, multi-file
 inspect. `fuck/demo.py` stays until the real pipeline lands.
+(Final-review fix wave later overrode the README exclusion with a
+single try-it line; error messages above reflect post-review behavior.)
 
 ## Verification
 
