@@ -6,8 +6,8 @@ F.U.C.K. -- quarterly audit one-pager
    !! SIMULATED DATA -- synthetic demo numbers; no real exports were read !!
 
 2. The five numbers
-   savings rate          16.7%  solid
-   fixed-cost ratio      36.7%  acceptable
+   savings rate            16.7%  solid
+   fixed-cost ratio        36.7%  acceptable
    recurring margin    EUR 4720.00  (trend, judged run over run)
    income streams     salary 92.9%, freelance 7.1%
    emergency fund     5.4 months  in_band

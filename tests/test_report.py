@@ -51,9 +51,7 @@ def _kpi_line(page: str, label: str) -> str:
 def test_not_computable_kpis_render_as_na_without_bands():
     page = render_minimal(net_income=D("0"), avg_monthly_expenses=D("0"))
     # Value slot AND band slot must both read n/a — a KPI that cannot be
-    # computed must not carry a band verdict. (The static target text on
-    # each line contains band words, so substring checks on the whole
-    # page would lie; check the two slots instead.)
+    # computed must not carry a band verdict.
     for label in ("savings rate", "fixed-cost ratio", "emergency fund"):
         line = _kpi_line(page, label)
         assert line.count("n/a") == 2, line
@@ -113,4 +111,4 @@ def test_negative_savings_rate_is_shown_and_banded_honestly():
     # Deferred from #11: a negative rate is real signal, not hidden.
     page = render_minimal(net_income=D("1000"), expenses=D("1200"))
     line = _kpi_line(page, "savings rate")
-    assert line == "   savings rate         -20.0%  below_floor"
+    assert line == "   savings rate           -20.0%  below_floor"
