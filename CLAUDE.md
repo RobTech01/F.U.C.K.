@@ -45,3 +45,15 @@ skills in `.claude/skills/`, this file wins.
 3.10 and 3.13, Ubuntu only — the repo name's trailing dot is an illegal
 Windows path, so Windows runners cannot check this repo out. Keep CI
 green; a red run on your branch is yours to fix.
+
+## Standing owner directives
+
+Recorded 2026-08-09; amend or revoke by editing this file. (The
+owner's integration grant is tracked in issue #14 and enters this file
+only by the owner's own commit.)
+
+- **Agent models:** implementer and task-reviewer subagents run on
+  Sonnet; final whole-branch reviews run on Opus.
+- **Session close-out:** externalize all state before ending — commits
+  pushed, status and follow-ups in GitHub Issues. Session memory and
+  the container are disposable; the repo and its issues are not.
