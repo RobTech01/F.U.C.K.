@@ -71,14 +71,15 @@ def render(
         f"   {banner}",
         "",
         "2. The five numbers",
-        f"   savings rate       {_pct(rate):>8}  {rate_band:<15}"
-        f"  target: >=10% floor / 15-20% solid / 20%+ wealth-building",
-        f"   fixed-cost ratio   {_pct(fixed_ratio):>8}  {fixed_band:<15}"
-        f"  target: <30% comfortable / <=50% ceiling / >65% critical",
-        f"   recurring margin   {_eur(margin):>12}  judged as a trend, run over run",
+        f"   savings rate       {_pct(rate):>8}  {rate_band}",
+        f"   fixed-cost ratio   {_pct(fixed_ratio):>8}  {fixed_band}",
+        f"   recurring margin   {_eur(margin):>12}  (trend, judged run over run)",
         f"   income streams     {streams_text}",
-        f"   emergency fund     {_months(months):>10}  {months_band:<15}"
-        f"  target: 3-6 months, a band not a maximum",
+        f"   emergency fund     {_months(months):>10}  {months_band}",
+        "",
+        "   target: savings >=10% floor / 15-20% solid / 20%+ wealth-building",
+        "           fixed   <30% comfortable / <=50% ceiling / >65% critical",
+        "           fund    3-6 months, a band not a maximum",
         "",
         "3. Fixed costs by annual cost",
         f"   {NOT_BUILT_FIXED}",

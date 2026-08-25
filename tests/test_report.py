@@ -61,3 +61,56 @@ def test_not_computable_kpis_render_as_na_without_bands():
 
 def test_page_is_ascii_only():
     demo.demo_page().encode("ascii")  # raises UnicodeEncodeError if violated
+
+
+def test_section_two_legend_lines_present_and_kpi_lines_omit_inline_target():
+    # Verdict 2B: target hints move out of the KPI lines into a compact
+    # legend at the end of section 2.
+    page = render_minimal()
+    assert (
+        "   target: savings >=10% floor / 15-20% solid / 20%+ wealth-building"
+        in page
+    )
+    assert (
+        "           fixed   <30% comfortable / <=50% ceiling / >65% critical"
+        in page
+    )
+    assert "           fund    3-6 months, a band not a maximum" in page
+    for label in (
+        "savings rate",
+        "fixed-cost ratio",
+        "recurring margin",
+        "income streams",
+        "emergency fund",
+    ):
+        line = _kpi_line(page, label)
+        assert "target:" not in line, line
+
+
+def test_no_rendered_line_has_trailing_whitespace():
+    for page in (demo.demo_page(), render_minimal()):
+        for line in page.splitlines():
+            assert line == line.rstrip(), repr(line)
+
+
+def test_section_two_lines_fit_in_72_columns():
+    page = demo.demo_page()
+    lines = page.splitlines()
+    start = lines.index("2. The five numbers")
+    end = lines.index("3. Fixed costs by annual cost")
+    for line in lines[start:end]:
+        assert len(line) <= 72, (len(line), line)
+
+
+def test_income_streams_renders_na_for_empty_sources():
+    # Deferred from #11.
+    page = render_minimal(income_by_source={})
+    line = _kpi_line(page, "income streams")
+    assert line == "   income streams     n/a"
+
+
+def test_negative_savings_rate_is_shown_and_banded_honestly():
+    # Deferred from #11: a negative rate is real signal, not hidden.
+    page = render_minimal(net_income=D("1000"), expenses=D("1200"))
+    line = _kpi_line(page, "savings rate")
+    assert line == "   savings rate         -20.0%  below_floor"
