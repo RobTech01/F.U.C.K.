@@ -113,8 +113,10 @@ against real exports before building)
   across the year → the tx_id source (rank-1 immutable reference; no
   balance fallback needed). Exactly one `TxDtls` per `Ntry` throughout.
   Counterparty name + IBAN on every entry → transfer netting viable.
-  `MndtId`/creditor ID as dedicated fields on ~1/3 of entries, embedded
-  as `MREF:`/`CRED:` tokens in `Ustrd` text otherwise. Booking type in
+  `MndtId`/creditor ID as dedicated fields on every entry that carries a
+  SEPA mandate at all (~1/3; parser-verified 2026-08-26: entries without
+  the fields carry no `MREF`/`CRED` text either — the `Ustrd`-token
+  fallback exists for other camt producers, not for BBBank). Booking type in
   `AddtlNtryInf` (`Lastschrift`, `Dauerauftrag`, `Lohn/Gehalt/Rente`,
   `Abschluss`, …) plus DK GVC codes in `BkTxCd/Prtry`. `OPBD`/`CLBD`
   balances per page → emergency-fund KPI input.
