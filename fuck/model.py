@@ -13,7 +13,9 @@ dialect):
 - ``Transaction.quality`` flags: ``"non_eur_unconverted"``,
   ``"fee_deducted"``.
 - ``SkippedRow.reason`` shapes: ``"state=<STATE>"`` (``STATE`` is the raw
-  status value the source used, e.g. ``"state=PENDING"``), ``"malformed"``.
+  status value the source used, e.g. ``"state=PENDING"``), ``"malformed"``,
+  ``"unsupported=multi-txdtls"`` (camt.052: more than one ``TxDtls`` under
+  a single ``Ntry``).
 """
 
 from __future__ import annotations

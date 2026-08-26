@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.052.001.08">
+  <BkToCstmrAcctRpt>
+    <GrpHdr>
+      <MsgId>MSGID-SYNTH-0001</MsgId>
+      <CreDtTm>2026-02-14T06:00:00</CreDtTm>
+    </GrpHdr>
+    <Rpt>
+      <Id>RPT-SYNTH-0001</Id>
+      <CreDtTm>2026-02-14T06:00:00</CreDtTm>
+      <Acct>
+        <Id><IBAN>DE89370400440532013000</IBAN></Id>
+        <Svcr><FinInstnId><Nm>Testbank eG</Nm></FinInstnId></Svcr>
+      </Acct>
+      <Bal>
+        <Tp><CdOrPrtry><Cd>OPBD</Cd></CdOrPrtry></Tp>
+        <Amt Ccy="EUR">1000.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Dt><Dt>2026-01-01</Dt></Dt>
+      </Bal>
+      <Bal>
+        <Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp>
+        <Amt Ccy="EUR">3123.17</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Dt><Dt>2026-02-14</Dt></Dt>
+      </Bal>
+  <Ntry>
+    <Amt Ccy="EUR">12.34</Amt><CdtDbtInd>DBIT</CdtDbtInd>
+    <Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2026-01-05</Dt></BookgDt><ValDt><Dt>2026-01-05</Dt></ValDt>
+    <AcctSvcrRef>2026010500000001000</AcctSvcrRef>
+    <BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>RDDT</Cd><SubFmlyCd>ESDD</SubFmlyCd></Fmly></Domn>
+      <Prtry><Cd>NDDT+105+00931</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+    <NtryDtls><TxDtls>
+      <Refs><AcctSvcrRef>2026010500000001000</AcctSvcrRef>
+        <EndToEndId>E2E-001</EndToEndId><MndtId>MANDATE-XYZ-1</MndtId></Refs>
+      <RltdPties>
+        <Dbtr><Pty><Nm>Kontoinhaber Test</Nm></Pty></Dbtr>
+        <Cdtr><Pty><Nm>MUSTERSHOP GMBH</Nm>
+          <Id><PrvtId><Othr><Id>DE98ZZZ09999999999</Id></Othr></PrvtId></Id></Pty></Cdtr>
+        <CdtrAcct><Id><IBAN>DE02120300000000202051</IBAN></Id></CdtrAcct>
+      </RltdPties>
+      <RmtInf><Ustrd>Bestellung 123-4567 MREF: MANDATE-XYZ-1 CRED: DE98ZZZ09999999999</Ustrd></RmtInf>
+    </TxDtls></NtryDtls>
+    <AddtlNtryInf>Lastschrift</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <Amt Ccy="EUR">9.99</Amt><CdtDbtInd>DBIT</CdtDbtInd>
+    <Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2026-01-12</Dt></BookgDt><ValDt><Dt>2026-01-12</Dt></ValDt>
+    <AcctSvcrRef>2026011200000002000</AcctSvcrRef>
+    <BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>RDDT</Cd><SubFmlyCd>ESDD</SubFmlyCd></Fmly></Domn>
+      <Prtry><Cd>NDDT+105+00932</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+    <NtryDtls><TxDtls>
+      <Refs><AcctSvcrRef>2026011200000002000</AcctSvcrRef>
+        <EndToEndId>E2E-002</EndToEndId></Refs>
+      <RltdPties>
+        <Dbtr><Pty><Nm>Kontoinhaber Test</Nm></Pty></Dbtr>
+        <Cdtr><Pty><Nm>MÜLLER VERSICHERUNG AG</Nm></Pty></Cdtr>
+      </RltdPties>
+      <RmtInf><Ustrd>Rechnung 998/2026 MREF: MREF-FALLBACK-77</Ustrd><Ustrd> CRED: DE11ZZZ00000000011</Ustrd></RmtInf>
+    </TxDtls></NtryDtls>
+    <AddtlNtryInf>Lastschrift</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <Amt Ccy="EUR">350.00</Amt><CdtDbtInd>DBIT</CdtDbtInd>
+    <Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2026-02-01</Dt></BookgDt><ValDt><Dt>2026-02-01</Dt></ValDt>
+    <AcctSvcrRef>2026020100000003000</AcctSvcrRef>
+    <BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>ICDT</Cd><SubFmlyCd>STDO</SubFmlyCd></Fmly></Domn>
+      <Prtry><Cd>NSTO+808+00001</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+    <NtryDtls><TxDtls>
+      <Refs><AcctSvcrRef>2026020100000003000</AcctSvcrRef>
+        <EndToEndId>NOTPROVIDED</EndToEndId></Refs>
+      <RltdPties>
+        <Dbtr><Pty><Nm>Kontoinhaber Test</Nm></Pty></Dbtr>
+        <Cdtr><Pty><Nm>VERMIETER MUSTER</Nm></Pty></Cdtr>
+      </RltdPties>
+      <Purp><Cd>RINP</Cd></Purp>
+      <RmtInf><Ustrd>Dauerauftrag Miete Februar</Ustrd></RmtInf>
+    </TxDtls></NtryDtls>
+    <AddtlNtryInf>Dauerauftrag</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <Amt Ccy="EUR">2500.00</Amt><CdtDbtInd>CRDT</CdtDbtInd>
+    <Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2026-02-01</Dt></BookgDt><ValDt><Dt>2026-02-01</Dt></ValDt>
+    <AcctSvcrRef>2026020100000004000</AcctSvcrRef>
+    <BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>ICDT</Cd><SubFmlyCd>SALA</SubFmlyCd></Fmly></Domn>
+      <Prtry><Cd>NCDT+809+00002</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+    <NtryDtls><TxDtls>
+      <Refs><AcctSvcrRef>2026020100000004000</AcctSvcrRef>
+        <EndToEndId>E2E-004</EndToEndId></Refs>
+      <RltdPties>
+        <Dbtr><Pty><Nm>ARBEITGEBER AG</Nm></Pty></Dbtr>
+        <Cdtr><Pty><Nm>Kontoinhaber Test</Nm></Pty></Cdtr>
+      </RltdPties>
+      <RmtInf><Ustrd>Gehalt Februar 2026</Ustrd></RmtInf>
+    </TxDtls></NtryDtls>
+    <AddtlNtryInf>Lohn/Gehalt/Rente</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <Amt Ccy="EUR">4.50</Amt><CdtDbtInd>DBIT</CdtDbtInd>
+    <Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2026-02-05</Dt></BookgDt><ValDt><Dt>2026-02-05</Dt></ValDt>
+    <AcctSvcrRef>2026020500000005000</AcctSvcrRef>
+    <BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>NTAV</Cd><SubFmlyCd>NTAV</SubFmlyCd></Fmly></Domn>
+      <Prtry><Cd>NABG+942+00000</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+    <AddtlNtryInf>Abschluss</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <Amt Ccy="USD">100.00</Amt><CdtDbtInd>CRDT</CdtDbtInd>
+    <Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2026-02-10</Dt></BookgDt><ValDt><Dt>2026-02-10</Dt></ValDt>
+    <AcctSvcrRef>2026021000000006000</AcctSvcrRef>
+    <BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>ICDT</Cd><SubFmlyCd>XBCT</SubFmlyCd></Fmly></Domn>
+      <Prtry><Cd>NCDT+809+00003</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+    <NtryDtls><TxDtls>
+      <Refs><AcctSvcrRef>2026021000000006000</AcctSvcrRef>
+        <EndToEndId>E2E-006</EndToEndId></Refs>
+      <RltdPties>
+        <Dbtr><Pty><Nm>OVERSEAS CLIENT LTD</Nm></Pty></Dbtr>
+        <Cdtr><Pty><Nm>Kontoinhaber Test</Nm></Pty></Cdtr>
+      </RltdPties>
+      <RmtInf><Ustrd>Invoice payment INV-2026-0810</Ustrd></RmtInf>
+    </TxDtls></NtryDtls>
+    <AddtlNtryInf>Gutschrift</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <Amt Ccy="EUR">77.00</Amt><CdtDbtInd>DBIT</CdtDbtInd>
+    <Sts><Cd>PDNG</Cd></Sts>
+    <BookgDt><Dt>2026-02-11</Dt></BookgDt><ValDt><Dt>2026-02-11</Dt></ValDt>
+    <AcctSvcrRef>2026021100000007000</AcctSvcrRef>
+    <NtryDtls><TxDtls>
+      <Refs><AcctSvcrRef>2026021100000007000</AcctSvcrRef>
+        <EndToEndId>E2E-007</EndToEndId></Refs>
+      <RltdPties>
+        <Dbtr><Pty><Nm>Kontoinhaber Test</Nm></Pty></Dbtr>
+        <Cdtr><Pty><Nm>PENDING PAYEE GMBH</Nm></Pty></Cdtr>
+      </RltdPties>
+      <RmtInf><Ustrd>Reservierung Hotel</Ustrd></RmtInf>
+    </TxDtls></NtryDtls>
+    <AddtlNtryInf>Kartenzahlung vorgemerkt</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <CdtDbtInd>DBIT</CdtDbtInd>
+    <Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2026-02-12</Dt></BookgDt><ValDt><Dt>2026-02-12</Dt></ValDt>
+    <AcctSvcrRef>2026021200000008000</AcctSvcrRef>
+    <AddtlNtryInf>Sonstige</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <Amt Ccy="EUR">55.00</Amt><CdtDbtInd>DBIT</CdtDbtInd>
+    <Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2026-02-13</Dt></BookgDt><ValDt><Dt>2026-02-13</Dt></ValDt>
+    <AcctSvcrRef>2026021300000009000</AcctSvcrRef>
+    <NtryDtls>
+      <TxDtls>
+        <Refs><AcctSvcrRef>2026021300000009000</AcctSvcrRef>
+          <EndToEndId>E2E-009A</EndToEndId></Refs>
+        <RltdPties><Cdtr><Pty><Nm>BATCH PAYEE ONE</Nm></Pty></Cdtr></RltdPties>
+        <RmtInf><Ustrd>Sammelbuchung Teil 1</Ustrd></RmtInf>
+      </TxDtls>
+      <TxDtls>
+        <Refs><AcctSvcrRef>2026021300000009000</AcctSvcrRef>
+          <EndToEndId>E2E-009B</EndToEndId></Refs>
+        <RltdPties><Cdtr><Pty><Nm>BATCH PAYEE TWO</Nm></Pty></Cdtr></RltdPties>
+        <RmtInf><Ustrd>Sammelbuchung Teil 2</Ustrd></RmtInf>
+      </TxDtls>
+    </NtryDtls>
+    <AddtlNtryInf>Sammelposten</AddtlNtryInf>
+  </Ntry>
+    </Rpt>
+  </BkToCstmrAcctRpt>
+</Document>

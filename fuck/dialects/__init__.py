@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fuck.dialects import revolut
+from fuck.dialects import camt052, revolut
 from fuck.model import ParseResult
 
 SNIFF_BYTES = 4096
@@ -20,6 +20,7 @@ PREVIEW_LINES = 3
 
 REGISTRY: dict[str, object] = {
     "revolut": revolut,
+    "camt052": camt052,
 }
 
 
