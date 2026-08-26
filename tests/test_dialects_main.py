@@ -129,6 +129,37 @@ def test_header_only_file_reports_zero_transactions(tmp_path, capsys):
     assert "skipped: 0" in lines
 
 
+def test_unknown_dialect_long_single_line_preview_is_byte_capped(tmp_path, capsys):
+    # A real camt.052 page is ONE physical line -- the pre-existing 3-line
+    # cap alone let a real transaction line dump ~3.4 KB to stderr (#13).
+    # This pins the total byte cap that bounds it regardless of line count.
+    huge = tmp_path / "huge.csv"
+    huge.write_text("X" * 5000, encoding="utf-8")
+
+    rc = inspect_cmd.main([str(huge)])
+    captured = capsys.readouterr()
+
+    assert rc == 1
+    assert captured.out == ""
+    message = captured.err.rstrip("\n")
+    assert len(message) < 400
+    assert message.endswith(" [truncated]")
+    assert huge.name in message
+
+
+def test_unknown_dialect_empty_file_has_no_first_lines_clause(tmp_path, capsys):
+    empty = tmp_path / "empty.csv"
+    empty.write_bytes(b"")
+
+    rc = inspect_cmd.main([str(empty)])
+    captured = capsys.readouterr()
+
+    assert rc == 1
+    assert captured.out == ""
+    assert captured.err == f"Unrecognized dialect for {empty.name}\n"
+    assert "first lines:" not in captured.err
+
+
 def test_skipped_reasons_sorted_by_count_descending(tmp_path, capsys):
     # Two rows made malformed (blanking a different required field on
     # each, mutated from real fixture rows) plus one PENDING row, copied

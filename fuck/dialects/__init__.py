@@ -10,6 +10,7 @@ its first raw lines rather than fail silently or guess a mapping.
 
 from __future__ import annotations
 
+import types
 from pathlib import Path
 
 from fuck.dialects import camt052, revolut
@@ -17,8 +18,9 @@ from fuck.model import ParseResult
 
 SNIFF_BYTES = 4096
 PREVIEW_LINES = 3
+PREVIEW_BYTES = 300
 
-REGISTRY: dict[str, object] = {
+REGISTRY: dict[str, types.ModuleType] = {
     "revolut": revolut,
     "camt052": camt052,
 }
@@ -44,8 +46,12 @@ def parse_file(path: Path) -> ParseResult:
         preview = "\n".join(
             sample.decode("utf-8", errors="replace").splitlines()[:PREVIEW_LINES]
         )
-        raise UnknownDialectError(
-            f"Unrecognized dialect for {path.name}; first lines:\n{preview}"
-        )
+        if len(preview) > PREVIEW_BYTES:
+            preview = preview[:PREVIEW_BYTES] + " [truncated]"
+        if preview:
+            message = f"Unrecognized dialect for {path.name}; first lines:\n{preview}"
+        else:
+            message = f"Unrecognized dialect for {path.name}"
+        raise UnknownDialectError(message)
 
     return REGISTRY[name].parse(path)
