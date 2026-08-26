@@ -30,11 +30,11 @@ converged on:
 One command, run on demand — sporadically, irregularly, by need:
 
 ```
-fuck audit exports/2026-Q3/*.csv
+fuck audit exports/2026-Q3/*
 ```
 
-reads whatever CSV exports it is given (BBBank, Revolut, Trade Republic,
-PayPal), prints a one-page report along the review agenda
+reads whatever exports it is given (BBBank camt.052 XML; Revolut, Trade
+Republic, PayPal CSV), prints a one-page report along the review agenda
 (`docs/finance-os.md` §5), and updates a snapshot for the next run's diff.
 No run may assume when the previous one happened — any gap length is
 normal operation, not an edge case.
@@ -89,8 +89,8 @@ fuck/
   report.py     terminal one-pager along the review agenda
   __main__.py   CLI: audit / report-only / --map fallback for unknown CSVs
 tests/
-  fixtures/     synthetic per-dialect CSVs (accepted: synthetic first,
-                validate against real headers when available)
+  fixtures/     synthetic per-dialect exports, CSV/XML (accepted: synthetic
+                first, validate against real files when available)
 ```
 
 ### Data contract: canonical Transaction
@@ -102,14 +102,22 @@ creditor_id?, mcc?, tx_id (derived), quality flags`
 ### Dialect notes (from verified research; re-verify *(unverified)* items
 against real exports before building)
 
-- **BBBank** (Atruvia/VR family): Windows-1252, semicolon, junk pre/postamble
-  around the real header (`Buchungstag;Valuta;…`), amounts with `S`/`H`
-  suffix, embedded linebreaks corrupt rows → needs a cleanup pre-pass.
-  Booking type in Buchungstext/Geschäftsart (`DAUERAUFTRAG`,
-  `FOLGELASTSCHRIFT` = single-row recurring signals). Mandatsreferenz /
-  Gläubiger-ID probably embedded in Verwendungszweck as MREF+/CRED+ tags
-  *(unverified)*. Footer carries Anfangs-/Endsaldo → balance for the
-  emergency-fund KPI.
+- **BBBank** (Atruvia/VR family): **camt.052.001.08 XML — verified against
+  a real one-year export, 2026-08-26 (issue #6); the earlier CSV plan is
+  dropped.** ISO-8859-1 declared in the prolog; the bank hands a ZIP of
+  sequential single-line XML chunks that are pages of ONE report — every
+  chunk stamps `PgNb=1`, only `LastPgInd` marks the last, so ordering
+  comes from the `_00000N` filename suffix; no entry duplication across
+  chunks. Per `Ntry`: unsigned `Amt` + `CdtDbtInd` carry the sign;
+  `Sts=BOOK`; `AcctSvcrRef` present on every entry and globally unique
+  across the year → the tx_id source (rank-1 immutable reference; no
+  balance fallback needed). Exactly one `TxDtls` per `Ntry` throughout.
+  Counterparty name + IBAN on every entry → transfer netting viable.
+  `MndtId`/creditor ID as dedicated fields on ~1/3 of entries, embedded
+  as `MREF:`/`CRED:` tokens in `Ustrd` text otherwise. Booking type in
+  `AddtlNtryInf` (`Lastschrift`, `Dauerauftrag`, `Lohn/Gehalt/Rente`,
+  `Abschluss`, …) plus DK GVC codes in `BkTxCd/Prtry`. `OPBD`/`CLBD`
+  balances per page → emergency-fund KPI input.
 - **Revolut**: comma-delimited, English headers (`Type, Product, Started
   Date, Completed Date, Description, Amount, Fee, Currency, State,
   Balance`), decimal point; drop `State != COMPLETED`; one file per
@@ -180,9 +188,13 @@ transfer netting (no invented or vanished money: sum preserved).
 
 1. Real header + 2–3 anonymized rows per source (owner offered synthetic
    first; collect when convenient) — resolves all *(unverified)* items.
+   *(BBBank: resolved 2026-08-26 via a real camt.052 export, issue #6.
+   TR and PayPal still pending.)*
 2. TR export: confirm delimiter/encoding/columns from a real file.
 3. PayPal `Typ` values for subscriptions — confirm or drop the signal.
 4. BBBank: are Mandatsreferenz/Gläubiger-ID separate columns or embedded?
+   *(Resolved 2026-08-26: dedicated `MndtId`/creditor-ID XML fields where
+   the bank fills them, else `MREF:`/`CRED:` tokens inside `Ustrd`.)*
 5. Revolut re-export: do already-completed rows keep a stable Balance once earlier pending rows post? Decides whether the balance-based tx_id discriminator survives real data.
 
 ## Estimate
