@@ -140,9 +140,23 @@ against real exports before building)
   (CASH/TRADING) + `type` (CUSTOMER_INPAYMENT, TRANSFER_*_INBOUND, BUY,
   DIVIDEND observed; more exist — parse type-agnostically, carry `type`
   verbatim).
-- **PayPal**: `Datum, Zeit, Name, Typ, Brutto, Entgelt, Netto, Guthaben,
-  Transaktionscode, …` — real merchant in `Name`. Export "Guthaben-relevant"
-  in 12-month chunks. `Typ` as recurring flag *(unverified)* → heuristic.
+- **PayPal**: consumer activity CSV, **verified against a real one-year
+  export 2026-08-27 (issue #6)** — English-locale headers (`Date, Time,
+  TimeZone, Name, Type, Status, Currency, Gross, Fee, Net, …,
+  Transaction ID, …, Reference Txn ID, …, Balance Impact`; the spec's
+  earlier German names are the other locale of the same export) with
+  **German decimal-comma numbers**; UTF-8 with BOM; ~12-month windows.
+  `Net` is already signed and consistent with `Balance Impact`;
+  `Transaction ID` unique on every row → tx_id. **The file is PayPal's
+  full internal ledger**: real merchant/P2P rows plus plumbing (funding
+  legs `Bank Deposit to PP Account`/`General Card Deposit`, currency
+  conversions from held foreign balances, authorization holds); in the
+  verified sample `Status != Completed` is exactly the funding-leg +
+  hold set, so the state filter skips the noisiest plumbing, and the
+  rest parses verbatim for normalize to classify. `Reference Txn ID`
+  starting `B-` is a billing-agreement ID → `mandate_ref` (PayPal's
+  mandate analog; supersedes the old `Typ` heuristic). Multi-currency
+  within one file → account per currency.
 
 ### Transfer netting (the architecturally critical piece)
 
@@ -207,9 +221,11 @@ transfer netting (no invented or vanished money: sum preserved).
 2. TR export: confirm delimiter/encoding/columns from a real file.
    *(Resolved 2026-08-27 via a real sample — see the TR dialect note.)*
 3. PayPal `Typ` values for subscriptions — confirm or drop the signal.
-   *(2026-08-27: first PayPal sample was a merchant Balance-Reconciliation
-   report with 0 records — the consumer activity CSV with
-   `Transaktionscode` is still needed; see issue #6.)*
+   *(Resolved 2026-08-27 via a real activity export: `Reference Txn ID`
+   values starting `B-` are billing-agreement IDs — a stronger,
+   mandate-like recurring signal that supersedes the `Typ` heuristic.
+   An earlier sample was a merchant Balance-Reconciliation report with
+   0 records; see issue #6.)*
 4. BBBank: are Mandatsreferenz/Gläubiger-ID separate columns or embedded?
    *(Resolved 2026-08-26: dedicated `MndtId`/creditor-ID XML fields where
    the bank fills them, else `MREF:`/`CRED:` tokens inside `Ustrd`.)*
