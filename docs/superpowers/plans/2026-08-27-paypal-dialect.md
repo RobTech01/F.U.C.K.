@@ -86,8 +86,9 @@ Registry: add `"paypal": paypal` (fourth entry).
 
 Written as UTF-8 **with a real BOM** (`b"\xef\xbb\xbf"` prefix — write
 bytes, and mind that the Edit tool corrupts non-trivial encodings; use
-a Python write). Header row EXACTLY this line (the real export's 40
-columns, verbatim):
+a Python write). Header row EXACTLY this line (the real export's 41
+columns, verbatim — an earlier draft of this plan miscounted 40; the
+literal line below is authoritative):
 
 ```
 "Date","Time","TimeZone","Name","Type","Status","Currency","Gross","Fee","Net","From Email Address","To Email Address","Transaction ID","Shipping Address","Address Status","Item Title","Item ID","Shipping and Handling Amount","Insurance Amount","Sales Tax","Option 1 Name","Option 1 Value","Option 2 Name","Option 2 Value","Reference Txn ID","Invoice Number","Custom Number","Quantity","Receipt ID","Balance","Address Line 1","Address Line 2/District/Neighborhood","Town/City","State/Province/Region/County/Territory/Prefecture/Republic","Zip/Postal Code","Country","Contact Phone Number","Subject","Note","Country Code","Balance Impact"
