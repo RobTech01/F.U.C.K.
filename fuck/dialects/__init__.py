@@ -13,7 +13,7 @@ from __future__ import annotations
 import types
 from pathlib import Path
 
-from fuck.dialects import camt052, revolut
+from fuck.dialects import camt052, revolut, tr
 from fuck.model import ParseResult
 
 SNIFF_BYTES = 4096
@@ -23,6 +23,7 @@ PREVIEW_CHARS = 300  # counts decoded characters, not bytes
 REGISTRY: dict[str, types.ModuleType] = {
     "revolut": revolut,
     "camt052": camt052,
+    "tr": tr,
 }
 
 

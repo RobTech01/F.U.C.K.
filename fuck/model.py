@@ -11,7 +11,8 @@ introduced by extending this list first, here, before it appears in any
 dialect):
 
 - ``Transaction.quality`` flags: ``"non_eur_unconverted"``,
-  ``"fee_deducted"``.
+  ``"fee_deducted"``, ``"tax_deducted"`` (TR: withheld KESt makes cash
+  impact differ from the gross amount).
 - ``SkippedRow.reason`` shapes: ``"state=<STATE>"`` (``STATE`` is the raw
   status value the source used, e.g. ``"state=PENDING"``), ``"malformed"``,
   ``"unsupported=multi-txdtls"`` (camt.052: more than one ``TxDtls`` under
