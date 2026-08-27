@@ -10,6 +10,16 @@ at source, so a taxed row's cash impact differs from the gross `amount`;
 `tax_deducted` flags that, same shape as `fee_deducted`). There is no
 state column: everything TR exports is already booked, so this dialect
 has exactly one skip reason, "malformed", and never raises per-row.
+
+`tx_id` hashes `transaction_id` alone -- model.py's rank-1 discriminator,
+a source-native immutable UUID present on every row -- deliberately
+WITHOUT the `account` label. `account` is a display string built from
+`account_type`, a cosmetic field with no bearing on which transaction
+this is; if TR ever renames it, mixing it into the hash would re-hash
+every row and break re-export dedup, the exact failure model.py's
+docstring warns about for Revolut's balance-based fallback. The UUID
+alone is already stable across re-exports and globally unique, so
+nothing else is needed.
 """
 
 from __future__ import annotations
@@ -23,10 +33,14 @@ from fuck.model import ParseResult, SkippedRow, Transaction, derive_tx_id
 
 _SNIFF_PREFIX = '"datetime","date","account_type"'
 
-# Rank-1 discriminators per the plan's "Per-row rules" step 1. Note
-# account_type is deliberately NOT required here -- it only feeds the
-# account label (step 9), it is not transactional data.
-_REQUIRED_FIELDS = ("date", "amount", "currency", "transaction_id", "type")
+# Rank-1 discriminators per the plan's "Per-row rules" step 1, minus
+# "type": same guard rationale revolut.py documents for "Balance" -- a
+# row missing a non-transactional column is still real money, and must
+# be counted (booking_type="") rather than skipped as malformed over a
+# cosmetic field. account_type is likewise deliberately NOT required
+# here -- it only feeds the account label (step 9), it is not
+# transactional data.
+_REQUIRED_FIELDS = ("date", "amount", "currency", "transaction_id")
 
 
 def sniffs(sample: bytes) -> bool:
@@ -78,8 +92,12 @@ def parse(path: Path) -> ParseResult:
                 quality.append("tax_deducted")
 
             payee_raw = row.get("counterparty_name") or row.get("name") or ""
-            account = f"TR {row.get('account_type', '')}"
-            tx_id = derive_tx_id("tr", account, row["transaction_id"])
+            # DictReader's restval is None, not "", so `or ""` is required
+            # to avoid a literal "None" leaking into the label; join
+            # instead of an f-string so an empty/missing account_type
+            # produces "TR" -- never the trailing-space "TR ".
+            account = " ".join(t for t in ("TR", row.get("account_type") or "") if t)
+            tx_id = derive_tx_id("tr", row["transaction_id"])
 
             transactions.append(
                 Transaction(
@@ -92,7 +110,7 @@ def parse(path: Path) -> ParseResult:
                     payee_raw=payee_raw,
                     tx_id=tx_id,
                     memo=row.get("description") or "",
-                    booking_type=row["type"],
+                    booking_type=row.get("type") or "",
                     mcc=row.get("mcc_code") or None,
                     quality=tuple(quality),
                 )

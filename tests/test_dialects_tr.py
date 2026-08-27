@@ -7,6 +7,7 @@ loaded from tests/fixtures/ -- plain UTF-8, every field quoted, with a
 literal Ü (0xC3 0x9C) in the R3 payee, pinning the utf-8-sig decode path.
 """
 
+import csv
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -35,6 +36,169 @@ def _tx_by_raw_amount(result, raw_amount, currency="EUR"):
         for t in result.transactions
         if t.raw_amount == raw_amount and t.currency == currency
     )
+
+
+def _tx_by_date(result, booked_date):
+    return next(
+        (t for t in result.transactions if t.booked_date == booked_date), None
+    )
+
+
+# Minimal header covering only the columns tr.parse() actually reads --
+# not the real export's 23 columns (test_inspect_command_end_to_end and
+# the other fixture-driven tests already pin fidelity to the real
+# header; this one is scoped to edge cases the main fixture doesn't
+# exercise).
+_COVERAGE_HEADER = [
+    "date",
+    "amount",
+    "currency",
+    "transaction_id",
+    "type",
+    "fee",
+    "tax",
+    "account_type",
+    "description",
+    "counterparty_name",
+    "name",
+    "mcc_code",
+]
+
+_COVERAGE_ROWS = [
+    # (a) fee AND tax both fold, in fee-then-tax flag order.
+    {
+        "date": "2026-07-01",
+        "amount": "100.00",
+        "currency": "EUR",
+        "transaction_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "type": "DIVIDEND",
+        "fee": "-1.00",
+        "tax": "-2.50",
+        "account_type": "DEFAULT",
+        "description": "fee and tax both present",
+        "counterparty_name": "",
+        "name": "",
+        "mcc_code": "",
+    },
+    # (b) non-numeric amount -- the InvalidOperation arm, not is_finite().
+    {
+        "date": "2026-07-02",
+        "amount": "abc",
+        "currency": "EUR",
+        "transaction_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        "type": "CUSTOMER_INPAYMENT",
+        "fee": "",
+        "tax": "",
+        "account_type": "DEFAULT",
+        "description": "malformed amount",
+        "counterparty_name": "",
+        "name": "",
+        "mcc_code": "",
+    },
+    # (c) fee="NaN" -- is_finite() must guard fee, not just amount.
+    {
+        "date": "2026-07-03",
+        "amount": "5.00",
+        "currency": "EUR",
+        "transaction_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+        "type": "CUSTOMER_INPAYMENT",
+        "fee": "NaN",
+        "tax": "",
+        "account_type": "DEFAULT",
+        "description": "malformed fee",
+        "counterparty_name": "",
+        "name": "",
+        "mcc_code": "",
+    },
+    # (d) embedded newline and an escaped quote -- memo round-trips verbatim.
+    {
+        "date": "2026-07-04",
+        "amount": "1.00",
+        "currency": "EUR",
+        "transaction_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        "type": "CUSTOMER_INPAYMENT",
+        "fee": "",
+        "tax": "",
+        "account_type": "DEFAULT",
+        "description": 'line one\nline "two"',
+        "counterparty_name": "",
+        "name": "",
+        "mcc_code": "",
+    },
+    # (e) empty account_type -- account label must be "TR", no trailing space.
+    {
+        "date": "2026-07-05",
+        "amount": "1.00",
+        "currency": "EUR",
+        "transaction_id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+        "type": "CUSTOMER_INPAYMENT",
+        "fee": "",
+        "tax": "",
+        "account_type": "",
+        "description": "no account type",
+        "counterparty_name": "",
+        "name": "",
+        "mcc_code": "",
+    },
+    # (f) empty type -- no longer required; parses with booking_type="".
+    {
+        "date": "2026-07-06",
+        "amount": "1.00",
+        "currency": "EUR",
+        "transaction_id": "ffffffff-ffff-4fff-8fff-ffffffffffff",
+        "type": "",
+        "fee": "",
+        "tax": "",
+        "account_type": "DEFAULT",
+        "description": "no type",
+        "counterparty_name": "",
+        "name": "",
+        "mcc_code": "",
+    },
+]
+
+
+@pytest.fixture
+def coverage_result(tmp_path):
+    path = tmp_path / "tr_coverage.csv"
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=_COVERAGE_HEADER, quoting=csv.QUOTE_ALL)
+        writer.writeheader()
+        writer.writerows(_COVERAGE_ROWS)
+    return tr.parse(path)
+
+
+def test_coverage_fee_tax_fold_and_row_edge_cases(coverage_result):
+    result = coverage_result
+    assert len(result.transactions) == 4
+    assert len(result.skipped) == 2
+    assert {row.reason for row in result.skipped} == {"malformed"}
+
+    # (a) both fee and tax fold into amount_eur; flags in fee-then-tax order.
+    tx_a = _tx_by_date(result, date(2026, 7, 1))
+    assert tx_a is not None
+    assert tx_a.amount_eur == Decimal("96.50")
+    assert tx_a.quality == ("fee_deducted", "tax_deducted")
+
+    # (b) and (c): both skipped malformed, for their distinct reasons.
+    malformed_raw = [row.raw for row in result.skipped if row.reason == "malformed"]
+    assert any("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" in raw for raw in malformed_raw)
+    assert any("cccccccc-cccc-4ccc-8ccc-cccccccccccc" in raw for raw in malformed_raw)
+
+    # (d) embedded newline + escaped quote survive the CSV round-trip verbatim.
+    tx_d = _tx_by_date(result, date(2026, 7, 4))
+    assert tx_d is not None
+    assert tx_d.memo == 'line one\nline "two"'
+
+    # (e) empty account_type -> "TR", never a trailing space.
+    tx_e = _tx_by_date(result, date(2026, 7, 5))
+    assert tx_e is not None
+    assert tx_e.account == "TR"
+
+    # (f) empty type -> row still parses, with booking_type="".
+    tx_f = _tx_by_date(result, date(2026, 7, 6))
+    assert tx_f is not None
+    assert tx_f.booking_type == ""
 
 
 def test_sniffs_accepts_fixture_and_bom_prefixed():
@@ -80,9 +244,7 @@ def test_r1_customer_inpayment_uses_counterparty_and_tx_id(result):
     assert r1.booking_type == "CUSTOMER_INPAYMENT"
     assert r1.quality == ()
     assert r1.account == "TR DEFAULT"
-    assert r1.tx_id == derive_tx_id(
-        "tr", "TR DEFAULT", "11111111-1111-4111-8111-111111111101"
-    )
+    assert r1.tx_id == derive_tx_id("tr", "11111111-1111-4111-8111-111111111101")
 
 
 def test_r2_buy_fund_name_fallback_no_flags_and_comma_memo(result):
