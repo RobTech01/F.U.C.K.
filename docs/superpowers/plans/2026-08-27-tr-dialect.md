@@ -30,8 +30,11 @@ payments; no state column (everything exported is booked).
 
 ### Per-row rules, in order
 
-1. Required non-empty: `date`, `amount`, `currency`, `transaction_id`,
-   `type`. Any missing/empty, or `date.fromisoformat` /
+1. Required non-empty: `date`, `amount`, `currency`, `transaction_id`.
+   (`type` was required in the first cut; the final review demoted it —
+   a row with a blank source label is still real money, counted with
+   `booking_type=""` rather than skipped.) Any missing/empty, or
+   `date.fromisoformat` /
    `Decimal(...)` failure, or a non-finite Decimal (`is_finite()`)
    anywhere in amount/fee/tax → skip `"malformed"` (raw = the row dict
    repr, matching revolut's convention).
@@ -55,8 +58,12 @@ payments; no state column (everything exported is booked).
    (unseen future types parse rather than break); `mcc` = `mcc_code`
    or None; `mandate_ref = creditor_id = None`; `payee_norm = ""`.
 8. `booked_date` from the `date` column (not `datetime`).
-9. `source = "tr"`; `account = f"TR {account_type}"` (sample:
-   `TR DEFAULT`); `tx_id = derive_tx_id("tr", account, transaction_id)`.
+9. `source = "tr"`; `account = "TR <account_type>"` with no trailing
+   space when the label is empty (sample: `TR DEFAULT`);
+   `tx_id = derive_tx_id("tr", transaction_id)` — the final review
+   dropped the account label from the hash parts: the UUID is the
+   rank-1 discriminator, and a display label in the hash would break
+   re-export dedup the day TR renames it.
 
 Registry: `REGISTRY = {"revolut": ..., "camt052": ..., "tr": tr}`.
 
@@ -90,7 +97,7 @@ Totals: 7 transactions, 3 skips (`malformed: 3`); EUR sum = 500 − 125
    still sniff themselves (three-way registry coexistence).
 2. `parse`: 7 transactions / 3 skips, reasons exactly `{"malformed"}`×3.
 3. Per-roster assertions R1–R7 incl. `tx_id ==
-   derive_tx_id("tr", "TR DEFAULT", <transaction_id>)` for R1, dates as
+   derive_tx_id("tr", <transaction_id>)` for R1, dates as
    `datetime.date`, fee/tax folding, flag tuples exact, mcc capture,
    comma-in-description survives (R2 memo verbatim).
 4. tx_ids unique.
