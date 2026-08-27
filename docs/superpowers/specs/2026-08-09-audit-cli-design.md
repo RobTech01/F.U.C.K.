@@ -128,8 +128,12 @@ against real exports before building)
   sample 2026-08-27 (issue #6)** — plain ASCII/UTF-8, comma-delimited,
   all fields quoted (the UTF-16LE+semicolon suspicion was wrong for this
   export). 23 columns: `date` (ISO) + full `datetime`; `amount` already
-  signed with separate signed `fee`/`tax` (cash impact = amount+fee+tax;
-  KESt withheld at source); `transaction_id` UUID → rank-1 tx_id;
+  signed with separate signed `fee` and `tax` (cash impact =
+  amount+fee+tax; KESt withheld at source). `fee`'s negative sign is
+  verified (the real sample's IBM buy row); `tax` sign *(inferred from
+  `fee`'s verified convention; the 2026-08-27 sample carries no taxed
+  row — verify against the first real taxed dividend/sell and remove
+  this hedge)*. `transaction_id` UUID → rank-1 tx_id;
   `counterparty_name`/`counterparty_iban` on cash movements (netting);
   `original_amount`/`original_currency`/`fx_rate` with `amount` already
   EUR-converted by TR; `mcc_code` for card payments; `category`

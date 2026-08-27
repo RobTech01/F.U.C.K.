@@ -8,12 +8,15 @@ CLAUDE.md, ONE atomic commit:
 
 Verified invariants this plan encodes: plain ASCII/UTF-8 comma CSV, all
 fields quoted; `amount` already signed; separate signed `fee` and `tax`
-columns (cash impact = amount + fee + tax; TR withholds KESt at source);
-`transaction_id` UUID on every row; `counterparty_name`/`counterparty_iban`
-on cash movements, empty on trades; `original_amount`/`original_currency`/
-`fx_rate` present when TR converted FX — `amount` is already EUR;
-`mcc_code` only on card payments; no state column (everything exported is
-booked).
+columns (cash impact = amount + fee + tax; TR withholds KESt at source).
+`fee`'s negative sign is verified (the real sample's IBM buy row); `tax`
+sign *(inferred from `fee`'s verified convention; the 2026-08-27 sample
+carries no taxed row — verify against the first real taxed
+dividend/sell and remove this hedge)*. `transaction_id` UUID on every
+row; `counterparty_name`/`counterparty_iban` on cash movements, empty on
+trades; `original_amount`/`original_currency`/`fx_rate` present when TR
+converted FX — `amount` is already EUR; `mcc_code` only on card
+payments; no state column (everything exported is booked).
 
 ## `fuck/dialects/tr.py` (+ registry, vocab, fixture, tests)
 

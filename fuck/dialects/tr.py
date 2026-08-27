@@ -7,9 +7,13 @@ converted to EUR by TR -- `original_amount`/`original_currency`/`fx_rate`
 describe that conversion, not one this parser must perform. Separate
 signed `fee` and `tax` columns fold into `amount_eur` (TR withholds KESt
 at source, so a taxed row's cash impact differs from the gross `amount`;
-`tax_deducted` flags that, same shape as `fee_deducted`). There is no
-state column: everything TR exports is already booked, so this dialect
-has exactly one skip reason, "malformed", and never raises per-row.
+`tax_deducted` flags that, same shape as `fee_deducted`). `fee`'s
+negative sign is verified, via the real sample's IBM buy row; `tax`'s
+is only INFERRED from `fee`'s convention -- the 2026-08-27 sample
+carries no taxed row, so verify the sign against the first real taxed
+dividend/sell and drop this caveat then. There is no state column:
+everything TR exports is already booked, so this dialect has exactly
+one skip reason, "malformed", and never raises per-row.
 
 `tx_id` hashes `transaction_id` alone -- model.py's rank-1 discriminator,
 a source-native immutable UUID present on every row -- deliberately
