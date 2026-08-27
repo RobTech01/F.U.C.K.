@@ -40,7 +40,7 @@
           <Id><PrvtId><Othr><Id>DE98ZZZ09999999999</Id></Othr></PrvtId></Id></Pty></Cdtr>
         <CdtrAcct><Id><IBAN>DE02120300000000202051</IBAN></Id></CdtrAcct>
       </RltdPties>
-      <RmtInf><Ustrd>Bestellung 123-4567 MREF: MANDATE-XYZ-1 CRED: DE98ZZZ09999999999</Ustrd></RmtInf>
+      <RmtInf><Ustrd>Bestellung 123-4567 MREF: TEXT-DECOY-IGNORED CRED: DE00ZZZ00000000000</Ustrd></RmtInf>
     </TxDtls></NtryDtls>
     <AddtlNtryInf>Lastschrift</AddtlNtryInf>
   </Ntry>
@@ -169,6 +169,35 @@
       </TxDtls>
     </NtryDtls>
     <AddtlNtryInf>Sammelposten</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <Amt Ccy="USD">55.00</Amt><CdtDbtInd>DBIT</CdtDbtInd>
+    <Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2026-02-12</Dt></BookgDt><ValDt><Dt>2026-02-12</Dt></ValDt>
+    <AcctSvcrRef>2026021200000010000</AcctSvcrRef>
+    <NtryDtls><TxDtls>
+      <Refs><AcctSvcrRef>2026021200000010000</AcctSvcrRef>
+        <EndToEndId>E2E-010</EndToEndId></Refs>
+      <RltdPties>
+        <Dbtr><Pty><Nm>Kontoinhaber Test</Nm></Pty></Dbtr>
+        <Cdtr><Pty><Nm>FOREIGN SUPPLIER LTD</Nm></Pty></Cdtr>
+      </RltdPties>
+      <RmtInf><Ustrd>Invoice USD-2026-0077</Ustrd><Ustrd/></RmtInf>
+    </TxDtls></NtryDtls>
+    <AddtlNtryInf>Auslandsueberweisung</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <Amt Ccy="EUR">NaN</Amt><CdtDbtInd>DBIT</CdtDbtInd>
+    <Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2026-02-14</Dt></BookgDt><ValDt><Dt>2026-02-14</Dt></ValDt>
+    <AcctSvcrRef>2026021400000011000</AcctSvcrRef>
+    <AddtlNtryInf>Sonstige</AddtlNtryInf>
+  </Ntry>
+  <Ntry>
+    <Amt Ccy="EUR">20.00</Amt><CdtDbtInd>DBIT</CdtDbtInd>
+    <BookgDt><Dt>2026-02-15</Dt></BookgDt><ValDt><Dt>2026-02-15</Dt></ValDt>
+    <AcctSvcrRef>2026021500000012000</AcctSvcrRef>
+    <AddtlNtryInf>Sonstige</AddtlNtryInf>
   </Ntry>
     </Rpt>
   </BkToCstmrAcctRpt>

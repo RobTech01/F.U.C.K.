@@ -1,4 +1,4 @@
-"""CSV inspect command: `python -m fuck.dialects <csv-file>`.
+"""CSV inspect command: `python -m fuck.dialects <export-file>`.
 
 Issue #6's verification harness -- feed a real export, see how the
 parser performs, without any CLI framework. Read-only: nothing is
@@ -8,6 +8,7 @@ written anywhere, so real financial data never leaves the terminal.
 from __future__ import annotations
 
 import sys
+import xml.etree.ElementTree as ET
 from collections import Counter
 from collections.abc import Iterable
 from decimal import Decimal
@@ -15,7 +16,7 @@ from pathlib import Path
 
 from fuck import dialects
 
-USAGE = "usage: python -m fuck.dialects <csv-file>"
+USAGE = "usage: python -m fuck.dialects <export-file>"
 
 
 def _eur(value: Decimal) -> str:
@@ -57,6 +58,9 @@ def main(argv: list[str] | None = None) -> int:
         result = dialects.REGISTRY[name].parse(path)
     except UnicodeDecodeError as e:
         print(f"cannot read {path.name} as UTF-8: {e}", file=sys.stderr)
+        return 1
+    except ET.ParseError as e:
+        print(f"cannot parse {path.name}: {e}", file=sys.stderr)
         return 1
 
     txs = result.transactions

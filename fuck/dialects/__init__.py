@@ -1,4 +1,4 @@
-"""Dialect registry: sniff a CSV sample, then dispatch to its parser.
+"""Dialect registry: sniff a sample, then dispatch to its parser.
 
 Registry-only knowledge lives here -- explicit, no magic (no
 auto-discovery or plugin scanning). Per-source parsing rules live in
@@ -18,7 +18,7 @@ from fuck.model import ParseResult
 
 SNIFF_BYTES = 4096
 PREVIEW_LINES = 3
-PREVIEW_BYTES = 300
+PREVIEW_CHARS = 300  # counts decoded characters, not bytes
 
 REGISTRY: dict[str, types.ModuleType] = {
     "revolut": revolut,
@@ -27,7 +27,7 @@ REGISTRY: dict[str, types.ModuleType] = {
 
 
 class UnknownDialectError(Exception):
-    """Message contains the file name and its first raw lines (≤3)."""
+    """Message names the file and previews its first lines (line- and length-capped)."""
 
 
 def sniff(sample: bytes) -> str | None:
@@ -46,9 +46,9 @@ def parse_file(path: Path) -> ParseResult:
         preview = "\n".join(
             sample.decode("utf-8", errors="replace").splitlines()[:PREVIEW_LINES]
         )
-        if len(preview) > PREVIEW_BYTES:
-            preview = preview[:PREVIEW_BYTES] + " [truncated]"
-        if preview:
+        if len(preview) > PREVIEW_CHARS:
+            preview = preview[:PREVIEW_CHARS] + " [truncated]"
+        if preview.strip():
             message = f"Unrecognized dialect for {path.name}; first lines:\n{preview}"
         else:
             message = f"Unrecognized dialect for {path.name}"

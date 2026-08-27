@@ -65,8 +65,8 @@ def test_registry_sniffs_camt052():
 
 
 def test_parse_counts(result):
-    assert len(result.transactions) == 6
-    assert len(result.skipped) == 3
+    assert len(result.transactions) == 7
+    assert len(result.skipped) == 5
 
 
 def test_skip_reasons_exact_set(result):
@@ -135,15 +135,43 @@ def test_e6_non_eur_amount_is_none_and_flagged(result):
     assert e6.raw_amount == "100.00"
 
 
+def test_e7_non_eur_debit_and_empty_ustrd_none_text_guard(result):
+    # DBIT (not CRDT, unlike E6) so raw_amount's sign is also pinned here;
+    # the empty <Ustrd/> sibling's .text is None, exercising the memo
+    # join's `u.text or ""` guard rather than assuming every Ustrd has text.
+    e7 = _tx_by_raw_amount(result, "-55.00", currency="USD")
+    assert e7.amount_eur is None
+    assert e7.currency == "USD"
+    assert e7.quality == ("non_eur_unconverted",)
+    assert e7.raw_amount == "-55.00"
+    assert e7.memo == "Invoice USD-2026-0077"
+
+
+def test_non_finite_amount_is_skipped_malformed(result):
+    # Decimal("NaN") parses without raising InvalidOperation, so it needs
+    # its own explicit finiteness guard or it becomes a Transaction that
+    # poisons sum(amount_eur) and every KPI built on it.
+    assert not any(tx.raw_amount == "-NaN" for tx in result.transactions)
+    malformed_raw = [row.raw for row in result.skipped if row.reason == "malformed"]
+    assert any('Ccy="EUR">NaN<' in raw for raw in malformed_raw)
+
+
+def test_missing_sts_element_is_skipped_malformed(result):
+    malformed_raw = [row.raw for row in result.skipped if row.reason == "malformed"]
+    assert any("2026021500000012000" in raw for raw in malformed_raw)
+
+
 def test_tx_ids_unique_across_fixture(result):
     ids = [tx.tx_id for tx in result.transactions]
-    assert len(set(ids)) == 6
+    assert len(set(ids)) == 7
 
 
 def test_registry_dispatch_routes_to_camt052():
     direct = camt052.parse(FIXTURE)
     via_registry = dialects.parse_file(FIXTURE)
-    assert len(via_registry.transactions) == len(direct.transactions)
+    assert [tx.tx_id for tx in via_registry.transactions] == [
+        tx.tx_id for tx in direct.transactions
+    ]
     assert len(via_registry.skipped) == len(direct.skipped)
 
 
@@ -155,12 +183,12 @@ def test_inspect_command_end_to_end(capsys):
     assert captured.out == (
         f"file: {FIXTURE.name}\n"
         "dialect: camt052\n"
-        "transactions: 6\n"
-        "date range: 2026-01-05 .. 2026-02-10\n"
+        "transactions: 7\n"
+        "date range: 2026-01-05 .. 2026-02-12\n"
         "sum(amount_eur): EUR 2123.17 over 5 rows\n"
-        "rows without EUR amount: 1\n"
-        "quality flags: non_eur_unconverted: 1\n"
-        "skipped: 3 (malformed: 1, state=PDNG: 1, unsupported=multi-txdtls: 1)\n"
+        "rows without EUR amount: 2\n"
+        "quality flags: non_eur_unconverted: 2\n"
+        "skipped: 5 (malformed: 3, state=PDNG: 1, unsupported=multi-txdtls: 1)\n"
         "tx_id collisions (within this file): 0\n"
     )
 

@@ -47,8 +47,8 @@ class Transaction:
 
 @dataclass(frozen=True, slots=True)
 class SkippedRow:
-    reason: str                      # "state=PENDING", "state=REVERTED", "malformed"
-    raw: str                         # the raw CSV line or a repr of the row dict
+    reason: str                      # "state=PENDING", "state=REVERTED", "malformed", "unsupported=multi-txdtls"
+    raw: str                         # raw CSV line, XML element string, or repr of the row dict
 
 
 @dataclass(frozen=True, slots=True)

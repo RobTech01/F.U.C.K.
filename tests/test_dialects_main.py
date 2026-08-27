@@ -13,6 +13,7 @@ from fuck.dialects import __main__ as inspect_cmd
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 EUR_FIXTURE = FIXTURES_DIR / "revolut_eur.csv"
 USD_FIXTURE = FIXTURES_DIR / "revolut_usd.csv"
+CAMT_FIXTURE = FIXTURES_DIR / "camt052_bbbank.xml"
 
 
 def test_revolut_eur_fixture_full_report(capsys):
@@ -75,6 +76,49 @@ def test_non_utf8_body_reports_cannot_read_as_utf8(tmp_path, capsys):
     assert "UTF-8" in captured.err
 
 
+def test_truncated_camt_file_reports_cannot_parse(tmp_path, capsys):
+    # A real camt.052 export cut short mid-download/mid-write is still
+    # well within the sniff window (the namespace URN sits on line 2),
+    # so it dispatches to camt052.parse -- which must not let ET's raw
+    # ParseError escape as a bare traceback.
+    truncated = tmp_path / "truncated_camt052.xml"
+    truncated.write_bytes(CAMT_FIXTURE.read_bytes()[:900])
+
+    rc = inspect_cmd.main([str(truncated)])
+    captured = capsys.readouterr()
+
+    assert rc == 1
+    assert captured.out == ""
+    assert captured.err.startswith("cannot parse")
+    assert truncated.name in captured.err
+
+
+def test_envelope_wrapped_root_reports_cannot_parse(tmp_path, capsys):
+    # Well-formed XML, sniffs as camt052 (the urn is present within the
+    # first 4096 bytes), but the parsed ROOT is the prefix-less
+    # <Envelope> wrapper rather than the namespaced <Document> -- the
+    # namespace-extraction step must fail deliberately, not with a bare
+    # ValueError from a raw str.index("{") call.
+    envelope = tmp_path / "envelope_camt052.xml"
+    envelope.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        "<Envelope>"
+        '<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.052.001.08">'
+        "<BkToCstmrAcctRpt/>"
+        "</Document>"
+        "</Envelope>",
+        encoding="utf-8",
+    )
+
+    rc = inspect_cmd.main([str(envelope)])
+    captured = capsys.readouterr()
+
+    assert rc == 1
+    assert captured.out == ""
+    assert captured.err.startswith("cannot parse")
+    assert envelope.name in captured.err
+
+
 def test_unknown_dialect_reports_to_stderr_and_empty_stdout(tmp_path, capsys):
     mystery = tmp_path / "mystery.csv"
     mystery.write_text("Datum;Betrag\n1;2\n", encoding="utf-8")
@@ -91,7 +135,7 @@ def test_no_args_prints_usage_and_returns_2(capsys):
     captured = capsys.readouterr()
     assert rc == 2
     assert captured.out == ""
-    assert captured.err == "usage: python -m fuck.dialects <csv-file>\n"
+    assert captured.err == "usage: python -m fuck.dialects <export-file>\n"
 
 
 def test_nonexistent_path_reports_to_stderr(tmp_path, capsys):
@@ -157,6 +201,25 @@ def test_unknown_dialect_empty_file_has_no_first_lines_clause(tmp_path, capsys):
     assert rc == 1
     assert captured.out == ""
     assert captured.err == f"Unrecognized dialect for {empty.name}\n"
+    assert "first lines:" not in captured.err
+
+
+def test_unknown_dialect_whitespace_only_file_has_no_first_lines_clause(
+    tmp_path, capsys
+):
+    # Blank-but-not-empty: splitlines() turns "\n\n" into non-empty-length
+    # blank strings, so a naive `if preview:` truth check sees a "line"
+    # that is really nothing -- and dangles a "; first lines:" clause
+    # with nothing useful after it.
+    blank = tmp_path / "blank.csv"
+    blank.write_bytes(b"\n\n")
+
+    rc = inspect_cmd.main([str(blank)])
+    captured = capsys.readouterr()
+
+    assert rc == 1
+    assert captured.out == ""
+    assert captured.err == f"Unrecognized dialect for {blank.name}\n"
     assert "first lines:" not in captured.err
 
 

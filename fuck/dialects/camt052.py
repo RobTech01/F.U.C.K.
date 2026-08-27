@@ -6,10 +6,14 @@ export (issue #6). ISO-8859-1 declared in the prolog; unsigned Amt +
 CdtDbtInd carry the sign; Sts=BOOK marks a real posting; AcctSvcrRef is
 present on every entry and globally unique across a year, so it is the
 tx_id source (no balance fallback needed, unlike Revolut). Namespace is
-read from the parsed root's own tag rather than hardcoded, so a sibling
-schema version (e.g. .001.02) with the same shape still parses. Skipped
-rows are counted, never silently dropped, and this parser never raises
-per-entry.
+read from the parsed root's own tag rather than hardcoded so the version
+pin lives in sniffs() alone, not here -- older sibling schema versions
+(e.g. .001.02) use a flat <Sts> instead of <Sts><Cd>, so they would
+silently skip every entry if parsed by this module; support for one is
+added only when a real file demands it. Skipped rows are counted, never
+silently dropped, and this parser never raises per-entry -- the one
+document-level exception is a root that carries no namespace at all,
+which raises ET.ParseError instead of guessing.
 """
 
 from __future__ import annotations
@@ -22,7 +26,7 @@ from pathlib import Path
 
 from fuck.model import ParseResult, SkippedRow, Transaction, derive_tx_id
 
-_NAMESPACE_PREFIX = b"urn:iso:std:iso:20022:tech:xsd:camt.052."
+_NAMESPACE_PREFIX = "urn:iso:std:iso:20022:tech:xsd:camt.052."
 
 _MREF_RE = re.compile(r"MREF: (\S+)")
 _CRED_RE = re.compile(r"CRED: (\S+)")
@@ -34,7 +38,7 @@ def sniffs(sample: bytes) -> bool:
     # non-ASCII bytes deeper in an ISO-8859-1 document -- the prolog and
     # namespace URI we look for are always plain ASCII regardless.
     text = sample.decode("utf-8-sig", errors="replace").lstrip()
-    return text.startswith("<?xml") and _NAMESPACE_PREFIX.decode("ascii") in text
+    return text.startswith("<?xml") and _NAMESPACE_PREFIX in text
 
 
 def _qpath(path: str, ns: str) -> str:
@@ -49,6 +53,8 @@ def _text(elem: ET.Element, path: str, ns: str) -> str | None:
 def parse(path: Path) -> ParseResult:
     tree = ET.parse(path)  # honors the prolog's declared encoding
     root = tree.getroot()
+    if "{" not in root.tag:
+        raise ET.ParseError(f"root element carries no namespace: {root.tag}")
     ns = root.tag[root.tag.index("{") + 1 : root.tag.index("}")]
 
     transactions: list[Transaction] = []
@@ -112,6 +118,13 @@ def parse(path: Path) -> ParseResult:
                 amount = Decimal(amt_text)
                 booked_date = date.fromisoformat(bookg_dt[:10])
             except (InvalidOperation, ValueError):
+                skipped.append(SkippedRow(reason="malformed", raw=raw))
+                continue
+
+            if not amount.is_finite():
+                # Decimal("NaN") / Decimal("Infinity") parse without
+                # raising InvalidOperation above, but would poison
+                # sum(amount_eur) and every KPI built on it.
                 skipped.append(SkippedRow(reason="malformed", raw=raw))
                 continue
 
