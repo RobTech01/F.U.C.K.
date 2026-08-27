@@ -1,4 +1,4 @@
-"""CSV inspect command: `python -m fuck.dialects <export-file>`.
+"""Export inspect command: `python -m fuck.dialects <export-file>`.
 
 Issue #6's verification harness -- feed a real export, see how the
 parser performs, without any CLI framework. Read-only: nothing is
