@@ -124,10 +124,18 @@ against real exports before building)
   Date, Completed Date, Description, Amount, Fee, Currency, State,
   Balance`), decimal point; drop `State != COMPLETED`; one file per
   currency pocket.
-- **Trade Republic**: native Transaktionsexport since ~2026-04, one table
-  for brokerage/cash/crypto/interest/Saveback/**card payments with merchant
-  + MCC**. Delimiter/encoding suspected UTF-16LE + semicolon *(unverified —
-  no mature parser exists anywhere; build against a real sample)*.
+- **Trade Republic**: native Transaktionsexport, **verified against a real
+  sample 2026-08-27 (issue #6)** — plain ASCII/UTF-8, comma-delimited,
+  all fields quoted (the UTF-16LE+semicolon suspicion was wrong for this
+  export). 23 columns: `date` (ISO) + full `datetime`; `amount` already
+  signed with separate signed `fee`/`tax` (cash impact = amount+fee+tax;
+  KESt withheld at source); `transaction_id` UUID → rank-1 tx_id;
+  `counterparty_name`/`counterparty_iban` on cash movements (netting);
+  `original_amount`/`original_currency`/`fx_rate` with `amount` already
+  EUR-converted by TR; `mcc_code` for card payments; `category`
+  (CASH/TRADING) + `type` (CUSTOMER_INPAYMENT, TRANSFER_*_INBOUND, BUY,
+  DIVIDEND observed; more exist — parse type-agnostically, carry `type`
+  verbatim).
 - **PayPal**: `Datum, Zeit, Name, Typ, Brutto, Entgelt, Netto, Guthaben,
   Transaktionscode, …` — real merchant in `Name`. Export "Guthaben-relevant"
   in 12-month chunks. `Typ` as recurring flag *(unverified)* → heuristic.
@@ -193,7 +201,11 @@ transfer netting (no invented or vanished money: sum preserved).
    *(BBBank: resolved 2026-08-26 via a real camt.052 export, issue #6.
    TR and PayPal still pending.)*
 2. TR export: confirm delimiter/encoding/columns from a real file.
+   *(Resolved 2026-08-27 via a real sample — see the TR dialect note.)*
 3. PayPal `Typ` values for subscriptions — confirm or drop the signal.
+   *(2026-08-27: first PayPal sample was a merchant Balance-Reconciliation
+   report with 0 records — the consumer activity CSV with
+   `Transaktionscode` is still needed; see issue #6.)*
 4. BBBank: are Mandatsreferenz/Gläubiger-ID separate columns or embedded?
    *(Resolved 2026-08-26: dedicated `MndtId`/creditor-ID XML fields where
    the bank fills them, else `MREF:`/`CRED:` tokens inside `Ustrd`.)*
