@@ -1,17 +1,28 @@
-"""PayPal dialect -- consumer activity export CSV.
+r"""PayPal dialect -- consumer activity export CSV.
 
 Parsing rules pinned in docs/superpowers/plans/2026-08-27-paypal-dialect.md,
 verified against a real one-year activity export (issue #6). Fourth and
 final planned dialect. English-locale headers (`Date, Time, TimeZone,
 Name, Type, Status, Currency, Gross, Fee, Net, ..., Transaction ID, ...,
 Reference Txn ID, ..., Balance Impact`) but German-locale decimal-comma
-numbers (`_decimal` strips a thousands dot, then converts the decimal
-comma) -- this dialect is comma-decimal by verified observation, so a
-hypothetical English-locale-numbers file would fail loudly as malformed
-rows, never parse wrong by 100x. The German-locale HEADER variant of the
-same export (translated column names, same data) is added only when a
-real file demands it -- out of scope here; `sniffs` matches the English
-header only.
+numbers -- `_decimal` enforces this shape rather than assuming it: the
+amount text (minus an optional leading `-`) must match
+`\d{1,3}(\.\d{3})*(,\d+)?` (dot-thousands, comma-decimal) before any
+conversion happens, so anything else -- English dot-decimal (`32.00`),
+English comma-thousands (`1,234.56`), or garbage -- is rejected and the
+row is skipped `malformed`. This dialect really does fail loudly on its
+numbers now, never silently 100x/1000x wrong, because a same-header
+English-locale-numbers file trips the shape guard on its very first
+amount. The one residual gap is dates, not amounts: `Date` is parsed as
+`%d/%m/%Y` (day-first), so a hypothetical US-ordered export would
+silently swap day/month for any day value <= 12 (both readings are
+valid dates) instead of raising. That gap is self-covering in practice:
+a source that reorders its date fields also switches its number locale,
+and the shape guard above already fails loudly on the first amount in
+such a file. The German-locale HEADER variant of the same export
+(translated column names, same data) is added only when a real file
+demands it -- out of scope here; `sniffs` matches the English header
+only.
 
 The file is PayPal's full internal ledger: real merchant/P2P rows plus
 plumbing (funding legs like `Bank Deposit to PP Account`, currency
@@ -41,6 +52,7 @@ unique, so nothing else is needed -- same rationale as tr.py's
 from __future__ import annotations
 
 import csv
+import re
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -66,9 +78,22 @@ def sniffs(sample: bytes) -> bool:
     return first_line.startswith(_SNIFF_PREFIX)
 
 
+# German-locale amount shape: optional leading "-", 1-3 digits, then any
+# number of ".XXX" thousands groups, then an optional ",XXX..." decimal
+# part. Every money cell in the verified export matches this; English
+# dot-decimal ("32.00") and English comma-thousands ("1,234.56") do not.
+_AMOUNT_SHAPE = re.compile(r"-?\d{1,3}(\.\d{3})*(,\d+)?")
+
+
 def _decimal(text: str) -> Decimal:
-    # German-locale number: strip the thousands dot (if any), then turn
-    # the decimal comma into a decimal point. "-1.234,56" -> "-1234.56".
+    # Shape guard BEFORE conversion: reject anything that isn't
+    # dot-thousands/comma-decimal so a same-header English-locale file
+    # (dot-decimal, or comma-thousands/dot-decimal) fails loudly here
+    # instead of silently parsing 100x/1000x wrong. Only then strip the
+    # thousands dot (if any) and turn the decimal comma into a decimal
+    # point: "-1.234,56" -> "-1234.56".
+    if not _AMOUNT_SHAPE.fullmatch(text):
+        raise InvalidOperation(f"not a German-locale decimal amount: {text!r}")
     return Decimal(text.replace(".", "").replace(",", "."))
 
 
@@ -83,6 +108,12 @@ def parse(path: Path) -> ParseResult:
                 skipped.append(SkippedRow(reason="malformed", raw=repr(row)))
                 continue
 
+            # Skip order is pinned: required-fields presence, then state,
+            # then per-cell parse guards below. A non-Completed row is
+            # skipped for its state before we ever judge its cells' shape
+            # -- state is the broader truth about the row (e.g. a Pending
+            # row with a garbage date still reports "state=Pending", never
+            # "malformed").
             status = row["Status"]
             if status != "Completed":
                 skipped.append(SkippedRow(reason=f"state={status}", raw=repr(row)))
@@ -91,7 +122,8 @@ def parse(path: Path) -> ParseResult:
             try:
                 booked_date = datetime.strptime(row["Date"], "%d/%m/%Y").date()
                 net = _decimal(row["Net"])
-                fee = _decimal(row["Fee"]) if row.get("Fee") else Decimal("0")
+                fee_raw = row.get("Fee")
+                fee = _decimal(fee_raw) if fee_raw else Decimal("0")
             except (InvalidOperation, ValueError):
                 skipped.append(SkippedRow(reason="malformed", raw=repr(row)))
                 continue
@@ -114,22 +146,36 @@ def parse(path: Path) -> ParseResult:
             if fee != 0:
                 quality.append("fee_deducted")
 
+            # Item Title, Subject, Note, Reference Txn ID, Name, and Type
+            # are all non-required: DictReader gives a short row's missing
+            # trailing columns restval=None (not ""), and a narrower
+            # column set omits the key entirely -- row.get(...) or ""
+            # survives both without ever raising per row.
             memo = " / ".join(
                 dict.fromkeys(
                     t
-                    for t in (row["Item Title"], row["Subject"], row["Note"])
+                    for t in (
+                        row.get("Item Title") or "",
+                        row.get("Subject") or "",
+                        row.get("Note") or "",
+                    )
                     if t
                 )
             )
 
-            reference_txn_id = row["Reference Txn ID"]
+            reference_txn_id = row.get("Reference Txn ID") or ""
             mandate_ref = (
                 reference_txn_id if reference_txn_id.startswith("B-") else None
             )
 
-            payee_raw = row["Name"] or ""
+            payee_raw = row.get("Name") or ""
             account = f"PayPal {currency}"
             tx_id = derive_tx_id("paypal", row["Transaction ID"])
+
+            # Gross and Net are both verbatim source cells for the same
+            # money; Net (required, so always present) is the fallback
+            # original when Gross is empty or missing.
+            raw_amount = row.get("Gross") or row["Net"]
 
             transactions.append(
                 Transaction(
@@ -138,11 +184,11 @@ def parse(path: Path) -> ParseResult:
                     booked_date=booked_date,
                     amount_eur=amount_eur,
                     currency=currency,
-                    raw_amount=row["Gross"],
+                    raw_amount=raw_amount,
                     payee_raw=payee_raw,
                     tx_id=tx_id,
                     memo=memo,
-                    booking_type=row["Type"] or "",
+                    booking_type=row.get("Type") or "",
                     mandate_ref=mandate_ref,
                     creditor_id=None,
                     mcc=None,
